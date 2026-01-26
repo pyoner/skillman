@@ -30,6 +30,7 @@ export function parseHelp(text: string): ParsedCLI {
   const lines = text.split("\n");
   let rawName = "unknown";
   let description = "";
+  let version: string | undefined;
   const options: ParsedOption[] = [];
   const commands: ParsedCommand[] = [];
 
@@ -38,13 +39,30 @@ export function parseHelp(text: string): ParsedCLI {
     rawName = usageMatch[1] || "unknown";
   }
 
-  const nonEmptyLines = lines.filter(line => line.trim().length > 0);
-  if (nonEmptyLines.length > 1) {
-    description = nonEmptyLines[1]!.trim();
+  // Extract version if present (e.g., "1.3.5" or "v1.3.5")
+  const versionMatch = text.match(/v?(\d+\.\d+\.\d+)/);
+  if (versionMatch) {
+    version = versionMatch[1];
   }
 
-  const optionRegex = /^\s*(-[a-zA-Z0-9])?,\s*(--[a-zA-Z0-9-]+)(\s+<[a-zA-Z0-9-]+>|\[[a-zA-Z0-9-]+\])?\s+(.*)$/;
-  const alternateOptionRegex = /^\s*(--[a-zA-Z0-9-]+)(\s+<[a-zA-Z0-9-]+>|\[[a-zA-Z0-9-]+\])?\s+(.*)$/;
+  const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+  
+  // Find description: look for the first line that doesn't start with "Usage" and has content
+  for (const line of nonEmptyLines) {
+    const trimmed = line.trim();
+    if (!trimmed.toLowerCase().startsWith("usage:") && trimmed.length > 20) {
+      description = trimmed;
+      break;
+    }
+  }
+
+  // Fallback description if the above logic fails
+  if (!description && nonEmptyLines.length > 0) {
+    description = nonEmptyLines[0]!.trim();
+  }
+
+  const optionRegex = /^\s*(-[a-zA-Z0-9])?,\s*(--[a-zA-Z0-9-]+)(?:[=\s]+(<[a-zA-Z0-9-]+>|\[[a-zA-Z0-9-]+\]))?\s+(.*)$/;
+  const alternateOptionRegex = /^\s*(--[a-zA-Z0-9-]+)(?:[=\s]+(<[a-zA-Z0-9-]+>|\[[a-zA-Z0-9-]+\]))?\s+(.*)$/;
   const commandRegex = /^\s+([a-z0-9-]+)\s+(.*)$/;
 
   let inCommandsSection = false;
@@ -97,6 +115,7 @@ export function parseHelp(text: string): ParsedCLI {
   return {
     name: normalizeName(rawName),
     description: ensureDescription(description, 10),
+    version,
     options,
     commands
   };

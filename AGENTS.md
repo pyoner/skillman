@@ -9,13 +9,16 @@ This repository contains `skillman`, a CLI tool designed to convert CLI help tex
 Agents should use `bun` for all operations. Do not use `npm`, `yarn`, or `pnpm`.
 
 ### Core Commands
+
 - **Install Dependencies**: `bun install`
 - **Run Application**: `bun run src/index.ts`
 - **Run in Watch Mode**: `bun --hot src/index.ts`
 - **Type Checking**: `bun x tsc --noEmit`
 
 ### Testing with `bun test`
+
 Bun has a built-in fast test runner.
+
 - **Run all tests**: `bun test`
 - **Run a single test file**: `bun test src/path/to/file.test.ts`
 - **Run tests with a specific name**: `bun test -t "search pattern"`
@@ -26,17 +29,20 @@ Bun has a built-in fast test runner.
 ## 📐 Code Style and Conventions
 
 ### 1. Language & Environment
+
 - **TypeScript**: Always use TypeScript. Avoid `any` at all costs.
 - **Runtime**: Target **Bun**. Use Bun-native APIs whenever possible.
 - **Strict Mode**: Strict null checks and other strict flags are enabled in `tsconfig.json`.
 
 ### 2. Imports & Modules
+
 - **ES Modules**: Use `import/export` syntax.
 - **Bun APIs**: Prefer `import { ... } from "bun"` or the global `Bun` object.
 - **Node Compatibility**: Only use `node:*` built-ins if a Bun-native equivalent doesn't exist.
 - **File Extensions**: When importing local files, omit the `.ts` extension unless specifically required.
 
 ### 3. Naming Conventions
+
 - **Files**: `kebab-case.ts` (e.g., `cli-parser.ts`, `skill-generator.ts`).
 - **Variables/Functions**: `camelCase`.
 - **Classes/Interfaces/Types**: `PascalCase`.
@@ -44,12 +50,14 @@ Bun has a built-in fast test runner.
 - **Enums**: `PascalCase` for the enum name and member names.
 
 ### 4. Bun-Native API Usage (Preferred)
+
 - **File I/O**: Use `Bun.file(path)` and `await file.text()` or `Bun.write(path, content)`.
 - **Shell Commands**: Use `Bun.$` (e.g., `await $`ls -la\``).
 - **Process Spawning**: Use `Bun.spawn`.
 - **Environment Variables**: Bun automatically loads `.env` files. Access via `process.env`.
 
 ### 5. Error Handling
+
 - Use explicit `try/catch` blocks for operations that might fail (File I/O, CLI execution).
 - Throw descriptive errors.
 - In `catch(e)` blocks, type-check the error before usage:
@@ -72,12 +80,13 @@ The goal is to generate JSON that adheres to the **Agent Skill** specification (
 Reference: [https://agentskills.io/specification](https://agentskills.io/specification)
 
 ### Key Components to Generate:
+
 1. **name**: Unique identifier for the skill.
 2. **description**: Clear explanation of what the skill does.
 3. **version**: Semantic versioning.
-4. **tools**: Array of tool definitions (name, description, parameters).
 
 ### Implementation Strategy for `skillman`:
+
 - **Parser**: Extract structure from CLI `--help` output or `man` pages.
 - **Mapping**: Map flags/arguments to tool parameters.
 - **Output**: Validated JSON file.
@@ -114,6 +123,7 @@ describe("Help Parser", () => {
 ---
 
 ## 📝 General Principles
+
 - **Keep it Simple**: Favor readable code over complex abstractions.
 - **Performance**: Leverage Bun's speed.
 - **Documentation**: Write JSDoc comments for public-facing functions/classes.
@@ -122,6 +132,8 @@ describe("Help Parser", () => {
 ---
 
 ## 🔌 Cursor/Copilot Instructions
+
 (No specific `.cursorrules` or `.github/copilot-instructions.md` found. Following project defaults.)
+
 - Follow the patterns established in `src/index.ts`.
 - Maintain the minimalist approach of the project.
