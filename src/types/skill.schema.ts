@@ -11,8 +11,6 @@ const NameSchema = z
   )
   .refine((s) => !s.includes("--"), "Must not contain consecutive hyphens");
 
-const SemverRegex = /^\d+\.\d+\.\d+(-[a-z0-9.]+)?$/i;
-
 export const PropertySchema = z.object({
   type: z.enum(["string", "number", "boolean", "array"]),
   description: z.string().min(1, "Description cannot be empty"),
@@ -37,6 +35,10 @@ export const ToolSchema = z.object({
   parameters: ToolParametersSchema,
 });
 
+/**
+ * Agent Skill Specification (v1)
+ * Based on SKILL_SPEC.md (agentskills.io/specification)
+ */
 export const AgentSkillSchema = z.object({
   name: NameSchema,
   description: z.string().min(1).max(1024),
@@ -44,16 +46,7 @@ export const AgentSkillSchema = z.object({
   compatibility: z.string().min(1).max(500).optional(),
   metadata: z.record(z.string(), z.string()).optional(),
   "allowed-tools": z.string().optional(),
-  version: z
-    .string()
-    .regex(SemverRegex, "Version must be a valid semver string (e.g., 1.0.0)"),
-  tools: z.array(ToolSchema).min(1, "At least one tool is required"),
 });
-
-export type Property = z.infer<typeof PropertySchema>;
-export type ToolParameters = z.infer<typeof ToolParametersSchema>;
-export type Tool = z.infer<typeof ToolSchema>;
-export type AgentSkill = z.infer<typeof AgentSkillSchema>;
 
 export const ParsedOptionSchema = z.object({
   name: z.string(),
@@ -61,13 +54,13 @@ export const ParsedOptionSchema = z.object({
   long: z.string().optional(),
   description: z.string(),
   type: z.enum(["string", "number", "boolean", "array"]),
-  defaultValue: z.any().optional()
+  defaultValue: z.any().optional(),
 });
 
 export const ParsedCommandSchema = z.object({
   name: z.string(),
   description: z.string(),
-  usage: z.string().optional()
+  usage: z.string().optional(),
 });
 
 export const ParsedCLISchema = z.object({
@@ -76,9 +69,13 @@ export const ParsedCLISchema = z.object({
   version: z.string().optional(),
   usage: z.string().optional(),
   options: z.array(ParsedOptionSchema),
-  commands: z.array(ParsedCommandSchema)
+  commands: z.array(ParsedCommandSchema),
 });
 
+export type Property = z.infer<typeof PropertySchema>;
+export type ToolParameters = z.infer<typeof ToolParametersSchema>;
+export type Tool = z.infer<typeof ToolSchema>;
+export type AgentSkill = z.infer<typeof AgentSkillSchema>;
 export type ParsedOption = z.infer<typeof ParsedOptionSchema>;
 export type ParsedCommand = z.infer<typeof ParsedCommandSchema>;
 export type ParsedCLI = z.infer<typeof ParsedCLISchema>;
