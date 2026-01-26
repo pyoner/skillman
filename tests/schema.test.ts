@@ -99,3 +99,27 @@ describe("AgentSkillSchema Validation (based on SKILL_SPEC.md)", () => {
     });
   });
 });
+
+describe("Parser Schemas Validation", () => {
+  test("should accept a valid ParsedCLI object", () => {
+    const validParsed: any = {
+      name: "mytool",
+      description: "A tool",
+      options: [
+        {
+          name: "verbose",
+          description: "Verbose output",
+          type: "boolean"
+        }
+      ],
+      commands: [
+        {
+          name: "build",
+          description: "Build command"
+        }
+      ]
+    };
+    const { ParsedCLISchema } = require("../src/types/skill.schema");
+    expect(ParsedCLISchema.safeParse(validParsed).success).toBe(true);
+  });
+});

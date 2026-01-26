@@ -54,3 +54,31 @@ export type Property = z.infer<typeof PropertySchema>;
 export type ToolParameters = z.infer<typeof ToolParametersSchema>;
 export type Tool = z.infer<typeof ToolSchema>;
 export type AgentSkill = z.infer<typeof AgentSkillSchema>;
+
+export const ParsedOptionSchema = z.object({
+  name: z.string(),
+  short: z.string().optional(),
+  long: z.string().optional(),
+  description: z.string(),
+  type: z.enum(["string", "number", "boolean", "array"]),
+  defaultValue: z.any().optional()
+});
+
+export const ParsedCommandSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  usage: z.string().optional()
+});
+
+export const ParsedCLISchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  version: z.string().optional(),
+  usage: z.string().optional(),
+  options: z.array(ParsedOptionSchema),
+  commands: z.array(ParsedCommandSchema)
+});
+
+export type ParsedOption = z.infer<typeof ParsedOptionSchema>;
+export type ParsedCommand = z.infer<typeof ParsedCommandSchema>;
+export type ParsedCLI = z.infer<typeof ParsedCLISchema>;
