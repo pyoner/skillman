@@ -1,35 +1,16 @@
-export interface AgentSkill {
-  name: string;
-  description: string;
-  version: string;
-  license?: string;
-  compatibility?: string;
-  metadata?: Record<string, string>;
-  "allowed-tools"?: string;
-  tools: Tool[];
-}
+import { 
+  type AgentSkill, 
+  type Tool, 
+  type ToolParameters, 
+  type Property 
+} from "./skill.schema";
 
-export interface Tool {
-  name: string;
-  description: string;
-  parameters: ToolParameters;
-}
-
-export interface ToolParameters {
-  type: "object";
-  properties: Record<string, Property>;
-  required?: string[];
-}
-
-export interface Property {
-  type: "string" | "number" | "boolean" | "array";
-  description: string;
-  items?: {
-    type: string;
-  };
-  enum?: string[];
-  default?: any;
-}
+export type { 
+  AgentSkill, 
+  Tool, 
+  ToolParameters, 
+  Property 
+};
 
 export interface ParsedCLI {
   name: string;

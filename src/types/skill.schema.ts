@@ -42,4 +42,7 @@ export const AgentSkillSchema = z.object({
   tools: z.array(ToolSchema).min(1, "At least one tool is required")
 });
 
+export type Property = z.infer<typeof PropertySchema>;
+export type ToolParameters = z.infer<typeof ToolParametersSchema>;
+export type Tool = z.infer<typeof ToolSchema>;
 export type AgentSkill = z.infer<typeof AgentSkillSchema>;

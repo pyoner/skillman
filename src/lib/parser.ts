@@ -1,4 +1,8 @@
-import { type ParsedCLI, type ParsedOption } from "../types/skill";
+import { 
+  type ParsedCLI, 
+  type ParsedOption, 
+  type ParsedCommand 
+} from "../types/skill";
 
 function normalizeName(name: string): string {
   let normalized = name.toLowerCase()
@@ -8,7 +12,6 @@ function normalizeName(name: string): string {
   
   if (normalized.length === 0) return "unknown";
   
-  // Truncate to 64 chars and ensure it doesn't end with a hyphen
   normalized = normalized.slice(0, 64).replace(/-+$/, "");
   
   return normalized;
@@ -28,7 +31,7 @@ export function parseHelp(text: string): ParsedCLI {
   let rawName = "unknown";
   let description = "";
   const options: ParsedOption[] = [];
-  const commands: any[] = [];
+  const commands: ParsedCommand[] = [];
 
   const usageMatch = text.match(/Usage:\s+(\w+)/i);
   if (usageMatch) {

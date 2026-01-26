@@ -1,4 +1,8 @@
-import { type AgentSkill, type ParsedCLI, type Tool } from "../types/skill";
+import { 
+  type AgentSkill, 
+  type ParsedCLI, 
+  type Tool 
+} from "../types/skill";
 import { AgentSkillSchema } from "../types/skill.schema";
 
 export function generateSkill(parsed: ParsedCLI): AgentSkill {
@@ -39,6 +43,5 @@ export function generateSkill(parsed: ParsedCLI): AgentSkill {
     tools
   };
 
-  // Validate the generated skill
   return AgentSkillSchema.parse(skill);
 }
