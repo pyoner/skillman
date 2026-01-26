@@ -2,6 +2,10 @@ export interface AgentSkill {
   name: string;
   description: string;
   version: string;
+  license?: string;
+  compatibility?: string;
+  metadata?: Record<string, string>;
+  "allowed-tools"?: string;
   tools: Tool[];
 }
 

@@ -1,15 +1,38 @@
 import { type ParsedCLI, type ParsedOption } from "../types/skill";
 
+function normalizeName(name: string): string {
+  let normalized = name.toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  
+  if (normalized.length === 0) return "unknown";
+  
+  // Truncate to 64 chars and ensure it doesn't end with a hyphen
+  normalized = normalized.slice(0, 64).replace(/-+$/, "");
+  
+  return normalized;
+}
+
+function ensureDescription(desc: string, minLength: number = 10): string {
+  desc = desc.trim();
+  if (desc.length === 0) return "No description available for this item.";
+  if (desc.length < minLength) {
+    return desc + " ".repeat(minLength - desc.length).replace(/ /g, ".");
+  }
+  return desc;
+}
+
 export function parseHelp(text: string): ParsedCLI {
   const lines = text.split("\n");
-  let name = "unknown";
+  let rawName = "unknown";
   let description = "";
   const options: ParsedOption[] = [];
   const commands: any[] = [];
 
   const usageMatch = text.match(/Usage:\s+(\w+)/i);
   if (usageMatch) {
-    name = usageMatch[1] || "unknown";
+    rawName = usageMatch[1] || "unknown";
   }
 
   const nonEmptyLines = lines.filter(line => line.trim().length > 0);
@@ -43,10 +66,10 @@ export function parseHelp(text: string): ParsedCLI {
 
       if (long) {
           options.push({
-            name: long.replace(/^--/, ""),
+            name: normalizeName(long.replace(/^--/, "")),
             short: short?.replace(/^-/, ""),
             long: long.replace(/^--/, ""),
-            description: desc?.trim() || "",
+            description: ensureDescription(desc?.trim() || "", 1),
             type: placeholder ? "string" : "boolean"
           });
       }
@@ -60,8 +83,8 @@ export function parseHelp(text: string): ParsedCLI {
         const cmdDesc = cmdMatch[2];
         if (cmdName && cmdDesc) {
           commands.push({
-            name: cmdName.trim(),
-            description: cmdDesc.trim()
+            name: normalizeName(cmdName.trim()),
+            description: ensureDescription(cmdDesc.trim(), 10)
           });
         }
       }
@@ -69,8 +92,8 @@ export function parseHelp(text: string): ParsedCLI {
   }
 
   return {
-    name,
-    description,
+    name: normalizeName(rawName),
+    description: ensureDescription(description, 10),
     options,
     commands
   };

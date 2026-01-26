@@ -1,4 +1,5 @@
 import { type AgentSkill, type ParsedCLI, type Tool } from "../types/skill";
+import { AgentSkillSchema } from "../types/skill.schema";
 
 export function generateSkill(parsed: ParsedCLI): AgentSkill {
   const tool: Tool = {
@@ -31,10 +32,13 @@ export function generateSkill(parsed: ParsedCLI): AgentSkill {
     });
   }
 
-  return {
+  const skill: AgentSkill = {
     name: parsed.name,
     description: parsed.description,
     version: "1.0.0",
     tools
   };
+
+  // Validate the generated skill
+  return AgentSkillSchema.parse(skill);
 }

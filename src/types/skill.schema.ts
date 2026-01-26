@@ -1,0 +1,45 @@
+import { z } from "zod";
+
+const NameSchema = z.string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, and hyphens only")
+  .refine(s => !s.startsWith("-") && !s.endsWith("-"), "Must not start or end with a hyphen")
+  .refine(s => !s.includes("--"), "Must not contain consecutive hyphens");
+
+const SemverRegex = /^\d+\.\d+\.\d+(-[a-z0-9.]+)?$/i;
+
+export const PropertySchema = z.object({
+  type: z.enum(["string", "number", "boolean", "array"]),
+  description: z.string().min(1, "Description cannot be empty"),
+  items: z.object({
+    type: z.string()
+  }).optional(),
+  enum: z.array(z.string()).optional(),
+  default: z.any().optional()
+});
+
+export const ToolParametersSchema = z.object({
+  type: z.literal("object"),
+  properties: z.record(z.string(), PropertySchema),
+  required: z.array(z.string()).optional()
+});
+
+export const ToolSchema = z.object({
+  name: NameSchema,
+  description: z.string().min(1),
+  parameters: ToolParametersSchema
+});
+
+export const AgentSkillSchema = z.object({
+  name: NameSchema,
+  description: z.string().min(1).max(1024),
+  license: z.string().optional(),
+  compatibility: z.string().max(500).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
+  "allowed-tools": z.string().optional(),
+  version: z.string().regex(SemverRegex, "Version must be a valid semver string (e.g., 1.0.0)"),
+  tools: z.array(ToolSchema).min(1, "At least one tool is required")
+});
+
+export type AgentSkill = z.infer<typeof AgentSkillSchema>;
