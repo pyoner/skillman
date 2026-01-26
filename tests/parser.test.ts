@@ -45,4 +45,17 @@ Commands:
     expect(parsed.commands[1]?.name).toBe("deploy");
     expect(parsed.commands[1]?.description).toBe("Deploy to production");
   });
+
+  test("should strip ANSI escape codes", () => {
+    const helpText = `
+\u001b[0m\u001b[1m\u001b[35mUsage:\u001b[0m \u001b[1mbun\u001b[0m <command>
+
+\u001b[1mBun\u001b[0m is a fast JavaScript runtime.
+    `;
+    const parsed = parseHelp(helpText);
+    
+    expect(parsed.name).toBe("bun");
+    expect(parsed.description).toBe("Bun is a fast JavaScript runtime.");
+    expect(parsed.description).not.toContain("\u001b");
+  });
 });

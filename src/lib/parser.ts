@@ -26,7 +26,13 @@ function ensureDescription(desc: string, minLength: number = 10): string {
   return desc;
 }
 
+function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, "");
+}
+
 export function parseHelp(text: string): ParsedCLI {
+  text = stripAnsi(text);
   const lines = text.split("\n");
   let rawName = "unknown";
   let description = "";
@@ -34,7 +40,7 @@ export function parseHelp(text: string): ParsedCLI {
   const options: ParsedOption[] = [];
   const commands: ParsedCommand[] = [];
 
-  const usageMatch = text.match(/Usage:\s+(\w+)/i);
+  const usageMatch = text.match(/Usage:\s+([a-zA-Z0-9-]+)/i);
   if (usageMatch) {
     rawName = usageMatch[1] || "unknown";
   }
