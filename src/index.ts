@@ -22,7 +22,7 @@ async function main() {
   }
 
   const parsed = parseHelp(input);
-  const skill = generateSkill(parsed, input);
+  const skill = generateSkill(parsed);
 
   console.log(JSON.stringify(skill, null, 2));
 }
