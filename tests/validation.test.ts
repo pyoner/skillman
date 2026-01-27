@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import { generateSkill } from "../src/lib/generator";
-import { type ParsedCLI } from "../src/types/skill";
+import { type ParsedCLI } from "../src/lib/schema";
 
 describe("Skill Generation (Spec Compliant)", () => {
   test("should generate a skill with version in metadata", () => {
