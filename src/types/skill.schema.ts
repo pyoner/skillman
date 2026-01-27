@@ -11,34 +11,6 @@ const NameSchema = z
   )
   .refine((s) => !s.includes("--"), "Must not contain consecutive hyphens");
 
-export const PropertySchema = z.object({
-  type: z.enum(["string", "number", "boolean", "array"]),
-  description: z.string().min(1, "Description cannot be empty"),
-  items: z
-    .object({
-      type: z.string(),
-    })
-    .optional(),
-  enum: z.array(z.string()).optional(),
-  default: z.any().optional(),
-});
-
-export const ProgramParametersSchema = z.object({
-  type: z.literal("object"),
-  properties: z.record(z.string(), PropertySchema),
-  required: z.array(z.string()).optional(),
-});
-
-export const ProgramSchema = z.object({
-  name: NameSchema,
-  description: z.string().min(1),
-  parameters: ProgramParametersSchema,
-});
-
-/**
- * Agent Skill Specification (v1)
- * Based on SKILL_SPEC.md (agentskills.io/specification)
- */
 export const AgentSkillSchema = z.object({
   name: NameSchema,
   description: z.string().min(1).max(1024),
@@ -72,9 +44,6 @@ export const ParsedCLISchema = z.object({
   commands: z.array(ParsedCommandSchema),
 });
 
-export type Property = z.infer<typeof PropertySchema>;
-export type ProgramParameters = z.infer<typeof ProgramParametersSchema>;
-export type Program = z.infer<typeof ProgramSchema>;
 export type AgentSkill = z.infer<typeof AgentSkillSchema>;
 export type ParsedOption = z.infer<typeof ParsedOptionSchema>;
 export type ParsedCommand = z.infer<typeof ParsedCommandSchema>;
