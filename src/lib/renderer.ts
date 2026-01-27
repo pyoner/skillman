@@ -29,7 +29,7 @@ ${rows.join("\n")}
 `;
 }
 
-function renderCommands(commands: ProgramCommand[]): string {
+function renderCommands(commands: ProgramCommand[], linkToReferences: boolean = false): string {
   if (commands.length === 0) return "";
 
   const header = `| Command | Description | Usage |
@@ -38,8 +38,13 @@ function renderCommands(commands: ProgramCommand[]): string {
   const rows = commands.map((cmd) => {
     const description = cmd.description.replace(/\|/g, "\\|");
     const usage = cmd.usage ? `\`${cmd.usage}\`` : "";
+    
+    let name = `\`${cmd.name}\``;
+    if (linkToReferences) {
+      name = `[${cmd.name}](references/${cmd.name}.md)`;
+    }
 
-    return `| \`${cmd.name}\` | ${description} | ${usage} |`;
+    return `| ${name} | ${description} | ${usage} |`;
   });
 
   return `### Commands
@@ -49,7 +54,7 @@ ${rows.join("\n")}
 `;
 }
 
-export function renderSkillBody(program: Program): string {
+export function renderSkillBody(program: Program, options: { linkToReferences?: boolean } = {}): string {
   const sections: string[] = [];
 
   // Title and Description
@@ -69,7 +74,7 @@ export function renderSkillBody(program: Program): string {
   }
 
   // Commands
-  const commandsTable = renderCommands(program.commands);
+  const commandsTable = renderCommands(program.commands, options.linkToReferences);
   if (commandsTable) {
     sections.push(commandsTable);
   }
