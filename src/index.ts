@@ -1,4 +1,4 @@
-import { parseHelp } from "./lib/parser";
+import { parseHelp, stripAnsi } from "./lib/parser";
 import { generateSkill } from "./lib/generator";
 import { crawlCommand } from "./lib/crawler";
 import { saveSkill } from "./lib/writer";
@@ -51,8 +51,9 @@ async function main() {
     }
   } else {
     // File/Stdin Parsing Mode (Output JSON)
-    const parsed = parseHelp(input);
-    const skill = generateSkill(parsed, input);
+    const cleanInput = stripAnsi(input);
+    const parsed = parseHelp(cleanInput);
+    const skill = generateSkill(parsed, cleanInput);
     console.log(JSON.stringify(skill, null, 2));
   }
 }

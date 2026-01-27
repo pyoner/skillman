@@ -1,8 +1,14 @@
+import { stripVTControlCharacters } from "node:util";
 import {
   type Program,
   type ProgramOption,
   type ProgramCommand,
 } from "./schema";
+
+export function stripAnsi(string: string): string {
+  // eslint-disable-next-line no-control-regex
+  return stripVTControlCharacters(string);
+}
 
 function normalizeName(name: string): string {
   let normalized = name
@@ -25,14 +31,6 @@ function ensureDescription(desc: string, minLength: number = 10): string {
     return desc + " ".repeat(minLength - desc.length).replace(/ /g, ".");
   }
   return desc;
-}
-
-function stripAnsi(text: string): string {
-  // eslint-disable-next-line no-control-regex
-  return text.replace(
-    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-    "",
-  );
 }
 
 export function parseHelp(text: string): Program {

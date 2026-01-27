@@ -8,6 +8,7 @@ import {
   createMarkdownProcessor,
   renderSkillBody,
 } from "./renderer";
+import { stripAnsi } from "./parser";
 import { type CrawledSkill } from "./crawler";
 
 export async function saveSkill(
@@ -17,6 +18,8 @@ export async function saveSkill(
   const skillName = crawled.main.program.name;
   const skillDir = join(outDir, skillName);
   const refsDir = join(skillDir, "references");
+
+  const mainRaw = stripAnsi(crawled.main.raw);
 
   // Create directories
   await Bun.write(join(skillDir, ".keep"), ""); // Ensure dir exists
@@ -31,7 +34,7 @@ export async function saveSkill(
   }));
 
   // Create the skill object to get metadata
-  const skillObj = generateSkill(crawled.main.program, crawled.main.raw);
+  const skillObj = generateSkill(crawled.main.program, mainRaw);
 
   // Construct Frontmatter Object
   const frontmatterData: Record<string, any> = {
@@ -62,7 +65,7 @@ export async function saveSkill(
   // Build the full AST for SKILL.md
   const bodyAst = createSkillAst(
     crawled.main.program,
-    crawled.main.raw,
+    mainRaw,
     refLinks,
   );
   bodyAst.children.unshift(yamlNode);
@@ -76,7 +79,8 @@ export async function saveSkill(
 
   // Write References
   for (const ref of crawled.references) {
-    const refBody = renderSkillBody(ref.program, ref.raw);
+    const refRaw = stripAnsi(ref.raw);
+    const refBody = renderSkillBody(ref.program, refRaw);
     await Bun.write(join(refsDir, `${ref.name}.md`), refBody);
   }
 
