@@ -3,7 +3,10 @@ import { generateSkill } from "./generator";
 import { renderSkillBody } from "./renderer";
 import { type CrawledSkill } from "./crawler";
 
-export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Promise<string> {
+export async function saveSkill(
+  crawled: CrawledSkill,
+  outDir: string = ".",
+): Promise<string> {
   const skillName = crawled.main.program.name;
   const skillDir = join(outDir, skillName);
   const refsDir = join(skillDir, "references");
@@ -21,29 +24,33 @@ export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Pr
   }));
 
   // Generate main SKILL.md
-  const mainBody = renderSkillBody(crawled.main.program, crawled.main.raw, refLinks);
-  
+  const mainBody = renderSkillBody(
+    crawled.main.program,
+    crawled.main.raw,
+    refLinks,
+  );
+
   // Create the skill object
   const skillObj = generateSkill(crawled.main.program, crawled.main.raw);
-  
+
   // Construct the SKILL.md file content
   const frontmatter = [
     "---",
     `name: ${skillObj.name}`,
     `description: ${skillObj.description}`,
   ];
-  
+
   if (skillObj.metadata) {
     frontmatter.push("metadata:");
     for (const [key, val] of Object.entries(skillObj.metadata)) {
       frontmatter.push(`  ${key}: ${JSON.stringify(val)}`);
     }
   }
-  
+
   frontmatter.push("---");
   frontmatter.push("");
   frontmatter.push(mainBody);
-  
+
   // Write SKILL.md
   await Bun.write(join(skillDir, "SKILL.md"), frontmatter.join("\n"));
 

@@ -4,12 +4,17 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/mdast": "^4.0.4"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "remark-gfm": "^4.0.1",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-builder": "^4.0.0",
     "zod": "^4.3.6"
   }
 }
