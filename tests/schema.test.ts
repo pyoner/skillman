@@ -6,6 +6,7 @@ describe("AgentSkillSchema Validation (Strict Spec alignment)", () => {
     name: "pdf-processing",
     description:
       "Extracts text and tables from PDF files, fills PDF forms, and merges multiple PDFs.",
+    body: "## Instructions\n\nRun the command.",
   };
 
   test("should accept a valid skill with only name and description", () => {

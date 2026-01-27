@@ -1,7 +1,7 @@
 import { type Program } from "./schema";
 import { AgentSkill } from "./schema";
 
-export function generateSkill(program: Program): AgentSkill {
+export function generateSkill(program: Program, originalHelpText: string): AgentSkill {
   const metadata: Record<string, string> = {};
 
   if (program.version) {
@@ -12,6 +12,8 @@ export function generateSkill(program: Program): AgentSkill {
     name: program.name,
     description: program.description,
     metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+    body: originalHelpText,
+    references: program.commands.length > 0 ? program.commands : undefined,
   };
 
   return AgentSkill.parse(skill);

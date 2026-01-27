@@ -11,15 +11,12 @@ const Name = z
   )
   .refine((s) => !s.includes("--"), "Must not contain consecutive hyphens");
 
-export const AgentSkill = z.object({
-  name: Name,
-  description: z.string().min(1).max(1024),
-  license: z.string().optional(),
-  compatibility: z.string().min(1).max(500).optional(),
-  metadata: z.record(z.string(), z.string()).optional(),
-  "allowed-tools": z.string().optional(),
+export const ProgramCommand = z.object({
+  name: z.string(),
+  description: z.string(),
+  usage: z.string().optional(),
 });
-export type AgentSkill = z.infer<typeof AgentSkill>;
+export type ProgramCommand = z.infer<typeof ProgramCommand>;
 
 export const ProgramOption = z.object({
   name: z.string(),
@@ -31,13 +28,6 @@ export const ProgramOption = z.object({
 });
 export type ProgramOption = z.infer<typeof ProgramOption>;
 
-export const ProgramCommand = z.object({
-  name: z.string(),
-  description: z.string(),
-  usage: z.string().optional(),
-});
-export type ProgramCommand = z.infer<typeof ProgramCommand>;
-
 export const Program = z.object({
   name: z.string(),
   description: z.string(),
@@ -47,3 +37,15 @@ export const Program = z.object({
   commands: z.array(ProgramCommand),
 });
 export type Program = z.infer<typeof Program>;
+
+export const AgentSkill = z.object({
+  name: Name,
+  description: z.string().min(1).max(1024),
+  license: z.string().optional(),
+  compatibility: z.string().min(1).max(500).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
+  "allowed-tools": z.string().optional(),
+  body: z.string(),
+  references: z.array(ProgramCommand).optional(),
+});
+export type AgentSkill = z.infer<typeof AgentSkill>;
