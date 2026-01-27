@@ -1,6 +1,13 @@
 import { join } from "node:path";
+import remarkFrontmatter from "remark-frontmatter";
+import { u } from "unist-builder";
+import { type RootContent } from "mdast";
 import { generateSkill } from "./generator";
-import { renderSkillBody } from "./renderer";
+import {
+  createSkillAst,
+  createMarkdownProcessor,
+  renderSkillBody,
+} from "./renderer";
 import { type CrawledSkill } from "./crawler";
 
 export async function saveSkill(
@@ -23,36 +30,49 @@ export async function saveSkill(
     url: `references/${ref.name}.md`,
   }));
 
-  // Generate main SKILL.md
-  const mainBody = renderSkillBody(
+  // Create the skill object to get metadata
+  const skillObj = generateSkill(crawled.main.program, crawled.main.raw);
+
+  // Construct Frontmatter Object
+  const frontmatterData: Record<string, any> = {
+    name: skillObj.name,
+    description: skillObj.description,
+  };
+
+  if (skillObj.metadata) {
+    frontmatterData.metadata = skillObj.metadata;
+  }
+
+  // Create YAML node manually since we don't have a specific yaml-builder
+  // remark-frontmatter parses 'yaml' nodes but we need to construct the text content
+  const yamlContent = Object.entries(frontmatterData)
+    .map(([key, value]) => {
+      if (typeof value === "object") {
+        const nested = Object.entries(value)
+          .map(([k, v]) => `  ${k}: ${JSON.stringify(v)}`)
+          .join("\n");
+        return `${key}:\n${nested}`;
+      }
+      return `${key}: ${value}`;
+    })
+    .join("\n");
+
+  const yamlNode = u("yaml", yamlContent) as RootContent;
+
+  // Build the full AST for SKILL.md
+  const bodyAst = createSkillAst(
     crawled.main.program,
     crawled.main.raw,
     refLinks,
   );
+  bodyAst.children.unshift(yamlNode);
 
-  // Create the skill object
-  const skillObj = generateSkill(crawled.main.program, crawled.main.raw);
-
-  // Construct the SKILL.md file content
-  const frontmatter = [
-    "---",
-    `name: ${skillObj.name}`,
-    `description: ${skillObj.description}`,
-  ];
-
-  if (skillObj.metadata) {
-    frontmatter.push("metadata:");
-    for (const [key, val] of Object.entries(skillObj.metadata)) {
-      frontmatter.push(`  ${key}: ${JSON.stringify(val)}`);
-    }
-  }
-
-  frontmatter.push("---");
-  frontmatter.push("");
-  frontmatter.push(mainBody);
+  // Process with unified + remark-frontmatter
+  const processor = createMarkdownProcessor().use(remarkFrontmatter, ["yaml"]);
+  const fileContent = processor.stringify(bodyAst);
 
   // Write SKILL.md
-  await Bun.write(join(skillDir, "SKILL.md"), frontmatter.join("\n"));
+  await Bun.write(join(skillDir, "SKILL.md"), fileContent);
 
   // Write References
   for (const ref of crawled.references) {
