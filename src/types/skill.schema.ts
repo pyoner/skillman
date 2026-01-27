@@ -23,16 +23,16 @@ export const PropertySchema = z.object({
   default: z.any().optional(),
 });
 
-export const ToolParametersSchema = z.object({
+export const ProgramParametersSchema = z.object({
   type: z.literal("object"),
   properties: z.record(z.string(), PropertySchema),
   required: z.array(z.string()).optional(),
 });
 
-export const ToolSchema = z.object({
+export const ProgramSchema = z.object({
   name: NameSchema,
   description: z.string().min(1),
-  parameters: ToolParametersSchema,
+  parameters: ProgramParametersSchema,
 });
 
 /**
@@ -73,8 +73,8 @@ export const ParsedCLISchema = z.object({
 });
 
 export type Property = z.infer<typeof PropertySchema>;
-export type ToolParameters = z.infer<typeof ToolParametersSchema>;
-export type Tool = z.infer<typeof ToolSchema>;
+export type ProgramParameters = z.infer<typeof ProgramParametersSchema>;
+export type Program = z.infer<typeof ProgramSchema>;
 export type AgentSkill = z.infer<typeof AgentSkillSchema>;
 export type ParsedOption = z.infer<typeof ParsedOptionSchema>;
 export type ParsedCommand = z.infer<typeof ParsedCommandSchema>;

@@ -5,15 +5,15 @@ import { type ParsedCLI } from "../src/types/skill";
 describe("Skill Generation (Spec Compliant)", () => {
   test("should generate a skill with version in metadata", () => {
     const parsed: ParsedCLI = {
-      name: "test-tool",
-      description: "A test tool description that is long enough.",
+      name: "test-program",
+      description: "A test program description that is long enough.",
       version: "1.2.3",
       options: [],
-      commands: []
+      commands: [],
     };
 
     const skill = generateSkill(parsed);
-    expect(skill.name).toBe("test-tool");
+    expect(skill.name).toBe("test-program");
     expect(skill.metadata?.version).toBe("1.2.3");
     expect((skill as any).version).toBeUndefined();
     expect((skill as any).tools).toBeUndefined();
