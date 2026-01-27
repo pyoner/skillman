@@ -1,4 +1,4 @@
-import { type Program, type ProgramOption, type ProgramCommand } from "./schema";
+import { type Program, type ProgramOption } from "./schema";
 
 function renderOptions(options: ProgramOption[]): string {
   if (options.length === 0) return "";
@@ -29,32 +29,11 @@ ${rows.join("\n")}
 `;
 }
 
-function renderCommands(commands: ProgramCommand[], linkToReferences: boolean = false): string {
-  if (commands.length === 0) return "";
-
-  const header = `| Command | Description | Usage |
-| :--- | :--- | :--- |`;
-
-  const rows = commands.map((cmd) => {
-    const description = cmd.description.replace(/\|/g, "\\|");
-    const usage = cmd.usage ? `\`${cmd.usage}\`` : "";
-    
-    let name = `\`${cmd.name}\``;
-    if (linkToReferences) {
-      name = `[${cmd.name}](references/${cmd.name}.md)`;
-    }
-
-    return `| ${name} | ${description} | ${usage} |`;
-  });
-
-  return `### Commands
-
-${header}
-${rows.join("\n")}
-`;
-}
-
-export function renderSkillBody(program: Program, options: { linkToReferences?: boolean } = {}): string {
+export function renderSkillBody(
+  program: Program,
+  rawHelpText: string,
+  references: { name: string; url: string }[] = []
+): string {
   const sections: string[] = [];
 
   // Title and Description
@@ -63,26 +42,20 @@ export function renderSkillBody(program: Program, options: { linkToReferences?: 
   sections.push(program.description);
   sections.push("");
 
-  // Usage
-  if (program.usage) {
-    sections.push("### Usage");
-    sections.push("");
-    sections.push("```bash");
-    sections.push(program.usage);
-    sections.push("```");
-    sections.push("");
-  }
+  // Raw Help Text
+  sections.push("```bash");
+  sections.push(rawHelpText.trim());
+  sections.push("```");
+  sections.push("");
 
-  // Commands
-  const commandsTable = renderCommands(program.commands, options.linkToReferences);
-  if (commandsTable) {
-    sections.push(commandsTable);
-  }
-
-  // Options
-  const optionsTable = renderOptions(program.options);
-  if (optionsTable) {
-    sections.push(optionsTable);
+  // References (Footnotes)
+  if (references.length > 0) {
+    sections.push("## References");
+    sections.push("");
+    for (const ref of references) {
+      sections.push(`- [${ref.name}](${ref.url})`);
+    }
+    sections.push("");
   }
 
   return sections.join("\n").trim();

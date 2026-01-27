@@ -12,11 +12,11 @@ describe("Skill Generation (Spec Compliant)", () => {
       commands: [],
     };
 
-    const skill = generateSkill(parsed);
+    const skill = generateSkill(parsed, "Raw help text body");
     expect(skill.name).toBe("test-program");
     expect(skill.metadata?.version).toBe("1.2.3");
-    expect(skill.body).toContain("# test-program");
-    expect(skill.body).toContain("A test program description");
+    expect(skill.body).toContain("```bash");
+    expect(skill.body).toContain("Raw help text body");
     expect((skill as any).version).toBeUndefined();
     expect((skill as any).tools).toBeUndefined();
   });

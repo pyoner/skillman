@@ -1,5 +1,4 @@
 import { join } from "node:path";
-import { type AgentSkill } from "./schema";
 import { generateSkill } from "./generator";
 import { renderSkillBody } from "./renderer";
 import { type CrawledSkill } from "./crawler";
@@ -15,15 +14,17 @@ export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Pr
     await Bun.write(join(refsDir, ".keep"), "");
   }
 
+  // Build reference links
+  const refLinks = crawled.references.map((ref) => ({
+    name: ref.name,
+    url: `references/${ref.name}.md`,
+  }));
+
   // Generate main SKILL.md
-  // Use generateSkill to get the valid AgentSkill object structure
-  // Pass linkToReferences: true to the renderer via generateSkill logic modification
-  // Note: We need to manually construct the body with links for the main file
-  const mainBody = renderSkillBody(crawled.main.program, { linkToReferences: true });
+  const mainBody = renderSkillBody(crawled.main.program, crawled.main.raw, refLinks);
   
-  // Create the skill object but override the body with the linked version
-  const skillObj = generateSkill(crawled.main.program);
-  skillObj.body = mainBody; // Override with linked body
+  // Create the skill object
+  const skillObj = generateSkill(crawled.main.program, crawled.main.raw);
   
   // Construct the SKILL.md file content
   const frontmatter = [
@@ -48,7 +49,7 @@ export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Pr
 
   // Write References
   for (const ref of crawled.references) {
-    const refBody = renderSkillBody(ref.program);
+    const refBody = renderSkillBody(ref.program, ref.raw);
     await Bun.write(join(refsDir, `${ref.name}.md`), refBody);
   }
 

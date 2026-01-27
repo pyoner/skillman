@@ -52,7 +52,7 @@ async function main() {
   } else {
     // File/Stdin Parsing Mode (Output JSON)
     const parsed = parseHelp(input);
-    const skill = generateSkill(parsed);
+    const skill = generateSkill(parsed, input);
     console.log(JSON.stringify(skill, null, 2));
   }
 }
