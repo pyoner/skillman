@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const NameSchema = z
+const Name = z
   .string()
   .min(1)
   .max(64)
@@ -11,16 +11,17 @@ const NameSchema = z
   )
   .refine((s) => !s.includes("--"), "Must not contain consecutive hyphens");
 
-export const AgentSkillSchema = z.object({
-  name: NameSchema,
+export const AgentSkill = z.object({
+  name: Name,
   description: z.string().min(1).max(1024),
   license: z.string().optional(),
   compatibility: z.string().min(1).max(500).optional(),
   metadata: z.record(z.string(), z.string()).optional(),
   "allowed-tools": z.string().optional(),
 });
+export type AgentSkill = z.infer<typeof AgentSkill>;
 
-export const ParsedOptionSchema = z.object({
+export const ProgramOption = z.object({
   name: z.string(),
   short: z.string().optional(),
   long: z.string().optional(),
@@ -28,23 +29,21 @@ export const ParsedOptionSchema = z.object({
   type: z.enum(["string", "number", "boolean", "array"]),
   defaultValue: z.any().optional(),
 });
+export type ProgramOption = z.infer<typeof ProgramOption>;
 
-export const ParsedCommandSchema = z.object({
+export const ProgramCommand = z.object({
   name: z.string(),
   description: z.string(),
   usage: z.string().optional(),
 });
+export type ProgramCommand = z.infer<typeof ProgramCommand>;
 
-export const ParsedCLISchema = z.object({
+export const Program = z.object({
   name: z.string(),
   description: z.string(),
   version: z.string().optional(),
   usage: z.string().optional(),
-  options: z.array(ParsedOptionSchema),
-  commands: z.array(ParsedCommandSchema),
+  options: z.array(ProgramOption),
+  commands: z.array(ProgramCommand),
 });
-
-export type AgentSkill = z.infer<typeof AgentSkillSchema>;
-export type ParsedOption = z.infer<typeof ParsedOptionSchema>;
-export type ParsedCommand = z.infer<typeof ParsedCommandSchema>;
-export type ParsedCLI = z.infer<typeof ParsedCLISchema>;
+export type Program = z.infer<typeof Program>;

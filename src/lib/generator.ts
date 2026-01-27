@@ -1,18 +1,18 @@
-import { type AgentSkill, type ParsedCLI } from "./schema";
-import { AgentSkillSchema } from "./schema";
+import { type Program } from "./schema";
+import { AgentSkill } from "./schema";
 
-export function generateSkill(parsed: ParsedCLI): AgentSkill {
+export function generateSkill(program: Program): AgentSkill {
   const metadata: Record<string, string> = {};
 
-  if (parsed.version) {
-    metadata.version = parsed.version;
+  if (program.version) {
+    metadata.version = program.version;
   }
 
   const skill: AgentSkill = {
-    name: parsed.name,
-    description: parsed.description,
+    name: program.name,
+    description: program.description,
     metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
   };
 
-  return AgentSkillSchema.parse(skill);
+  return AgentSkill.parse(skill);
 }

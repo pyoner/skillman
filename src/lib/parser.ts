@@ -1,7 +1,7 @@
 import {
-  type ParsedCLI,
-  type ParsedOption,
-  type ParsedCommand,
+  type Program,
+  type ProgramOption,
+  type ProgramCommand,
 } from "./schema";
 
 function normalizeName(name: string): string {
@@ -35,14 +35,14 @@ function stripAnsi(text: string): string {
   );
 }
 
-export function parseHelp(text: string): ParsedCLI {
+export function parseHelp(text: string): Program {
   text = stripAnsi(text);
   const lines = text.split("\n");
   let rawName = "unknown";
   let description = "";
   let version: string | undefined;
-  const options: ParsedOption[] = [];
-  const commands: ParsedCommand[] = [];
+  const options: ProgramOption[] = [];
+  const commands: ProgramCommand[] = [];
 
   const usageMatch = text.match(/Usage:\s+([a-zA-Z0-9-]+)/i);
   if (usageMatch) {

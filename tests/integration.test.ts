@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import { $ } from "bun";
-import { AgentSkillSchema } from "../src/lib/schema";
+import { AgentSkill } from "../src/lib/schema";
 
 describe("Integration", () => {
   test("should parse bun -h output correctly", async () => {
@@ -18,7 +18,7 @@ describe("Integration", () => {
     const json = JSON.parse(output);
 
     // Validate against schema
-    const result = AgentSkillSchema.safeParse(json);
+    const result = AgentSkill.safeParse(json);
     if (!result.success) {
       console.error(result.error);
     }
