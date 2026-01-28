@@ -48,7 +48,9 @@ export async function crawlCommand(commandName: string): Promise<CrawledSkill> {
 
   // 2. Fetch help for each subcommand
   for (const cmd of mainProgram.commands) {
-    const subCmdRaw = await getHelpText([commandName, cmd.name]);
+    // Support multi-word commands like "store add"
+    const cmdArgs = cmd.name.split(/\s+/);
+    const subCmdRaw = await getHelpText([commandName, ...cmdArgs]);
     if (subCmdRaw.trim()) {
       const subProgram = parseHelp(subCmdRaw);
 
