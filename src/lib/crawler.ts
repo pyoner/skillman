@@ -1,4 +1,7 @@
 import { $ } from "bun";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { parseHelp, stripAnsi } from "./parser";
 import { type Program } from "./schema";
 
@@ -15,13 +18,16 @@ export interface CrawledSkill {
 }
 
 async function getHelpText(command: string[]): Promise<string> {
+  const tempDir = await mkdtemp(join(tmpdir(), "skillman-"));
   try {
-    const { stdout } = await $`${command} --help`.quiet();
+    const { stdout } = await $`${command} --help`.cwd(tempDir).quiet();
     return stdout.toString();
   } catch (e) {
     // Some commands might output help to stderr or exit with non-zero
     // We try to capture that if possible, otherwise return empty
     return "";
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
   }
 }
 
