@@ -14,12 +14,6 @@ export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Pr
 
   const mainRaw = stripAnsi(crawled.main.raw);
 
-  // Create directories
-  await Bun.write(join(skillDir, ".keep"), ""); // Ensure dir exists
-  if (crawled.references.length > 0) {
-    await Bun.write(join(refsDir, ".keep"), "");
-  }
-
   // Build reference links
   const refLinks = crawled.references.map((ref) => ({
     name: ref.name,
