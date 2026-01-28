@@ -13,9 +13,7 @@ export function createSkillAst(
   const treeChildren: RootContent[] = [];
 
   // Title
-  treeChildren.push(
-    u("heading", { depth: 1 as const }, [u("text", program.name)]),
-  );
+  treeChildren.push(u("heading", { depth: 1 as const }, [u("text", program.name)]));
 
   // Description
   const descParagraphs = program.description.split(/\n\s*\n/);
@@ -30,14 +28,10 @@ export function createSkillAst(
 
   // References (Footnotes)
   if (references.length > 0) {
-    treeChildren.push(
-      u("heading", { depth: 2 as const }, [u("text", "References")]),
-    );
+    treeChildren.push(u("heading", { depth: 2 as const }, [u("text", "References")]));
 
     const listItems = references.map((ref) =>
-      u("listItem", [
-        u("paragraph", [u("link", { url: ref.url }, [u("text", ref.name)])]),
-      ]),
+      u("listItem", [u("paragraph", [u("link", { url: ref.url }, [u("text", ref.name)])])]),
     );
 
     treeChildren.push(u("list", { ordered: false, spread: false }, listItems));

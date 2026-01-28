@@ -1,9 +1,5 @@
 import { stripVTControlCharacters } from "node:util";
-import {
-  type Program,
-  type ProgramOption,
-  type ProgramCommand,
-} from "./schema";
+import { type Program, type ProgramOption, type ProgramCommand } from "./schema";
 
 export function stripAnsi(string: string): string {
   // eslint-disable-next-line no-control-regex
@@ -58,7 +54,7 @@ export function parseHelp(text: string): Program {
   // Find description: look for the first line that doesn't start with "Usage" and has content
   for (const line of nonEmptyLines) {
     const trimmed = line.trim();
-    
+
     // Stop if we hit a section header, to avoid capturing commands or options as description
     if (trimmed.match(/^(Commands|Subcommands|Options|Flags|Arguments|Examples|Alias):/i)) {
       break;

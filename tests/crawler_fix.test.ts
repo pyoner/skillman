@@ -5,9 +5,9 @@ import { resolve } from "path";
 describe("Crawler Fix", () => {
   test("should ignore subcommands that do not return valid help", async () => {
     const mockCliPath = resolve(process.cwd(), "tests/repro_issue.ts");
-    
+
     console.log(`Crawling mock CLI at: ${mockCliPath}`);
-    
+
     const result = await crawlCommand(mockCliPath);
 
     // Check main program
@@ -17,7 +17,7 @@ describe("Crawler Fix", () => {
     // Check references
     // "bad" should be ignored because it doesn't return "Usage:"
     // "good" should be present
-    const refNames = result.references.map(r => r.name);
+    const refNames = result.references.map((r) => r.name);
     console.log("Captured references:", refNames);
 
     expect(refNames).toContain("good");

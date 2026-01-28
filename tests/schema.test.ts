@@ -23,8 +23,7 @@ describe("AgentSkillSchema Validation (Strict Spec alignment)", () => {
   });
 
   describe("name field constraints", () => {
-    const testName = (name: string) =>
-      AgentSkill.safeParse({ ...validBaseSkill, name }).success;
+    const testName = (name: string) => AgentSkill.safeParse({ ...validBaseSkill, name }).success;
 
     test("valid examples from spec", () => {
       expect(testName("pdf-processing")).toBe(true);
@@ -41,10 +40,7 @@ describe("AgentSkillSchema Validation (Strict Spec alignment)", () => {
 
   describe("optional fields from spec", () => {
     test("license field", () => {
-      expect(
-        AgentSkill.safeParse({ ...validBaseSkill, license: "Apache-2.0" })
-          .success,
-      ).toBe(true);
+      expect(AgentSkill.safeParse({ ...validBaseSkill, license: "Apache-2.0" }).success).toBe(true);
     });
 
     test("compatibility field", () => {
@@ -54,9 +50,7 @@ describe("AgentSkillSchema Validation (Strict Spec alignment)", () => {
           compatibility: "Requires git",
         }).success,
       ).toBe(true);
-      expect(
-        AgentSkill.safeParse({ ...validBaseSkill, compatibility: "" }).success,
-      ).toBe(false);
+      expect(AgentSkill.safeParse({ ...validBaseSkill, compatibility: "" }).success).toBe(false);
     });
 
     test("metadata field", () => {

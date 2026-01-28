@@ -3,18 +3,11 @@ import remarkFrontmatter from "remark-frontmatter";
 import { u } from "unist-builder";
 import { type RootContent } from "mdast";
 import { generateSkill } from "./generator";
-import {
-  createSkillAst,
-  createMarkdownProcessor,
-  renderSkillBody,
-} from "./renderer";
+import { createSkillAst, createMarkdownProcessor, renderSkillBody } from "./renderer";
 import { stripAnsi } from "./parser";
 import { type CrawledSkill } from "./crawler";
 
-export async function saveSkill(
-  crawled: CrawledSkill,
-  outDir: string = ".",
-): Promise<string> {
+export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Promise<string> {
   const skillName = crawled.main.program.name;
   const skillDir = join(outDir, skillName);
   const refsDir = join(skillDir, "references");
@@ -63,11 +56,7 @@ export async function saveSkill(
   const yamlNode = u("yaml", yamlContent) as RootContent;
 
   // Build the full AST for SKILL.md
-  const bodyAst = createSkillAst(
-    crawled.main.program,
-    mainRaw,
-    refLinks,
-  );
+  const bodyAst = createSkillAst(crawled.main.program, mainRaw, refLinks);
   bodyAst.children.unshift(yamlNode);
 
   // Process with unified + remark-frontmatter

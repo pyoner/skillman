@@ -5,10 +5,7 @@ const Name = z
   .min(1)
   .max(64)
   .regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, and hyphens only")
-  .refine(
-    (s) => !s.startsWith("-") && !s.endsWith("-"),
-    "Must not start or end with a hyphen",
-  )
+  .refine((s) => !s.startsWith("-") && !s.endsWith("-"), "Must not start or end with a hyphen")
   .refine((s) => !s.includes("--"), "Must not contain consecutive hyphens");
 
 export const ProgramCommand = z.object({

@@ -11,7 +11,7 @@ async function main() {
   // Priority 1: Arguments provided
   if (args.length > 0) {
     const arg = args[0]!;
-    
+
     // Check if the argument is an existing file
     const file = Bun.file(arg);
     if (await file.exists()) {
@@ -21,14 +21,14 @@ async function main() {
       isCommandMode = true;
       input = arg;
     }
-  } 
+  }
   // Priority 2: Stdin provided (and no args)
   else if (!process.stdin.isTTY) {
     input = await Bun.stdin.text();
   }
   // Priority 3: Usage error
   else {
-    console.error("Usage: skillman <command-name|file-path> or echo \"help text\" | skillman");
+    console.error('Usage: skillman <command-name|file-path> or echo "help text" | skillman');
     process.exit(1);
   }
 
@@ -41,12 +41,14 @@ async function main() {
     try {
       console.error(`Crawling command: ${input}...`);
       const crawled = await crawlCommand(input);
-      
+
       const outDir = await saveSkill(crawled);
       console.log(`Skill generated at: ${outDir}`);
-      
     } catch (e) {
-      console.error(`Error crawling command '${input}':`, e instanceof Error ? e.message : String(e));
+      console.error(
+        `Error crawling command '${input}':`,
+        e instanceof Error ? e.message : String(e),
+      );
       process.exit(1);
     }
   } else {
@@ -58,7 +60,7 @@ async function main() {
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

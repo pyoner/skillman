@@ -73,7 +73,7 @@ Options:
 `;
 
     const result = parseHelp(helpText);
-    
+
     // Should not capture "init [name] ..." as description
     expect(result.description).not.toContain("init [name]");
     expect(result.description).toBe("No description available for this item.");

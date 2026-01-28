@@ -5,8 +5,7 @@ import { AgentSkill } from "../src/lib/schema";
 describe("Integration", () => {
   test("should parse bun -h output correctly", async () => {
     // Run bun -h | bun run src/index.ts
-    const { stdout, stderr, exitCode } =
-      await $`bun -h | bun run src/index.ts`.quiet();
+    const { stdout, stderr, exitCode } = await $`bun -h | bun run src/index.ts`.quiet();
 
     if (exitCode !== 0) {
       console.error(stderr.toString());
