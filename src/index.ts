@@ -12,7 +12,8 @@ program
   .description("Convert CLI help text or man pages into Agent Skill format")
   .version(packageJson.version || "0.0.0")
   .argument("[input]", "command name to crawl, file path to parse, or empty for stdin")
-  .action(async (inputArgument: string | undefined) => {
+  .option("-o, --out <dir>", "output directory for the generated skill", ".")
+  .action(async (inputArgument: string | undefined, options: { out: string }) => {
     let input = "";
     let isCommandMode = false;
 
@@ -41,8 +42,8 @@ program
       try {
         console.error(`Crawling command: ${input}...`);
         const crawled = await crawlCommand(input);
-        const outDir = await saveSkill(crawled);
-        console.log(`Skill generated at: ${outDir}`);
+        const outDir = await saveSkill(crawled, options.out);
+        console.error(`Skill generated at: ${outDir}`);
       } catch (e) {
         console.error(
           `Error crawling command '${input}':`,
@@ -51,11 +52,23 @@ program
         process.exit(1);
       }
     } else {
-      // File/Stdin Parsing Mode (Output JSON)
+      // File/Stdin Parsing Mode
       const cleanInput = stripAnsi(input);
       const parsed = parseHelp(cleanInput);
-      const skill = generateSkill(parsed, cleanInput);
-      console.log(JSON.stringify(skill, null, 2));
+
+      if (options.out !== ".") {
+        // Output to directory as SKILL.md
+        const crawled = {
+          main: { program: parsed, raw: cleanInput },
+          references: [],
+        };
+        const outDir = await saveSkill(crawled, options.out);
+        console.error(`Skill generated at: ${outDir}`);
+      } else {
+        // Default: Output JSON to stdout
+        const skill = generateSkill(parsed, cleanInput);
+        console.log(JSON.stringify(skill, null, 2));
+      }
     }
   });
 
