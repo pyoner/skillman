@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { parseHelp } from "./parser";
+import { parseHelp, stripAnsi } from "./parser";
 import { type Program } from "./schema";
 
 export interface CrawledSkill {
@@ -45,6 +45,17 @@ export async function crawlCommand(commandName: string): Promise<CrawledSkill> {
     const subCmdRaw = await getHelpText([commandName, cmd.name]);
     if (subCmdRaw.trim()) {
       const subProgram = parseHelp(subCmdRaw);
+
+      // Ignore invalid help output
+      if (
+        subProgram.name === "unknown" &&
+        subProgram.options.length === 0 &&
+        subProgram.commands.length === 0 &&
+        !stripAnsi(subCmdRaw).match(/Usage:/i)
+      ) {
+        continue;
+      }
+
       // Ensure subcommand name is set correctly
       if (subProgram.name === "unknown") {
         subProgram.name = cmd.name;
