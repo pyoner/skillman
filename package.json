@@ -1,14 +1,11 @@
 {
   "name": "skillman",
-  "module": "src/index.ts",
-  "type": "module",
   "private": true,
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/mdast": "^4.0.4"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "dependencies": {
     "remark-frontmatter": "^5.0.0",
@@ -17,5 +14,13 @@
     "unified": "^11.0.5",
     "unist-builder": "^4.0.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/mdast": "^4.0.4",
+    "oxfmt": "^0.27.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }
