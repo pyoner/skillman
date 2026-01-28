@@ -78,4 +78,20 @@ Options:
     expect(result.description).not.toContain("init [name]");
     expect(result.description).toBe("No description available for this item.");
   });
+
+  test("should parse description when Alias is present", () => {
+    const helpText = `
+Usage: bun add [flags] <package><@version>
+Alias: bun a
+
+  Add a new dependency to package.json and install it.
+
+Flags:
+  -c, --config=<val>                 Specify path to config file (bunfig.toml)
+`;
+    const parsed = parseHelp(helpText);
+
+    expect(parsed.name).toBe("bun");
+    expect(parsed.description).toBe("Add a new dependency to package.json and install it.");
+  });
 });

@@ -56,11 +56,14 @@ export function parseHelp(text: string): Program {
     const trimmed = line.trim();
 
     // Stop if we hit a section header, to avoid capturing commands or options as description
-    if (trimmed.match(/^(Commands|Subcommands|Options|Flags|Arguments|Examples|Alias):/i)) {
+    if (trimmed.match(/^(Commands|Subcommands|Options|Flags|Arguments|Examples):/i)) {
       break;
     }
 
-    if (!trimmed.toLowerCase().startsWith("usage:") && trimmed.length > 20) {
+    const isUsage = trimmed.toLowerCase().startsWith("usage:");
+    const isAlias = trimmed.match(/^(alias|aliases):/i);
+
+    if (!isUsage && !isAlias && trimmed.length > 5) {
       description = trimmed;
       break;
     }
