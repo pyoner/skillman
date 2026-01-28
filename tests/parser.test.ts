@@ -58,4 +58,24 @@ Commands:
     expect(parsed.description).toBe("Bun is a fast JavaScript runtime.");
     expect(parsed.description).not.toContain("\u001b");
   });
+
+  test("should not capture first command as description when top-level description is missing", () => {
+    const helpText = `
+Usage: skills <command> [options]
+
+Commands:
+  init [name]       Initialize a skill (creates <name>/SKILL.md or ./SKILL.md)
+  add <package>     Add a skill package
+  check             Check for available skill updates
+
+Options:
+  --help, -h        Show this help message
+`;
+
+    const result = parseHelp(helpText);
+    
+    // Should not capture "init [name] ..." as description
+    expect(result.description).not.toContain("init [name]");
+    expect(result.description).toBe("No description available for this item.");
+  });
 });

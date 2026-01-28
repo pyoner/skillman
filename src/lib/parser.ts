@@ -58,6 +58,12 @@ export function parseHelp(text: string): Program {
   // Find description: look for the first line that doesn't start with "Usage" and has content
   for (const line of nonEmptyLines) {
     const trimmed = line.trim();
+    
+    // Stop if we hit a section header, to avoid capturing commands or options as description
+    if (trimmed.match(/^(Commands|Subcommands|Options|Flags|Arguments|Examples|Alias):/i)) {
+      break;
+    }
+
     if (!trimmed.toLowerCase().startsWith("usage:") && trimmed.length > 20) {
       description = trimmed;
       break;
@@ -66,7 +72,10 @@ export function parseHelp(text: string): Program {
 
   // Fallback description if the above logic fails
   if (!description && nonEmptyLines.length > 0) {
-    description = nonEmptyLines[0]!.trim();
+    const firstLine = nonEmptyLines[0]!.trim();
+    if (!firstLine.toLowerCase().startsWith("usage:")) {
+      description = firstLine;
+    }
   }
 
   const optionRegex =
