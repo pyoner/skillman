@@ -2,7 +2,6 @@ import { stripVTControlCharacters } from "node:util";
 import { type Program, type ProgramOption, type ProgramCommand } from "./schema";
 
 export function stripAnsi(string: string): string {
-  // eslint-disable-next-line no-control-regex
   return stripVTControlCharacters(string);
 }
 
@@ -20,11 +19,15 @@ function normalizeName(name: string): string {
   return normalized;
 }
 
-function ensureDescription(desc: string, minLength: number = 10): string {
+function ensureDescription(desc: string, minLength: number = 1): string {
   desc = desc.trim();
   if (desc.length === 0) return "No description available for this item.";
   if (desc.length < minLength) {
     return desc + " ".repeat(minLength - desc.length).replace(/ /g, ".");
+  }
+  // Truncate to avoid AgentSkill validation errors (max 1024)
+  if (desc.length > 1024) {
+    return desc.slice(0, 1021) + "...";
   }
   return desc;
 }
@@ -32,109 +35,157 @@ function ensureDescription(desc: string, minLength: number = 10): string {
 export function parseHelp(text: string): Program {
   text = stripAnsi(text);
   const lines = text.split("\n");
-  let rawName = "unknown";
-  let description = "";
+
+  type BlockType = "usage" | "options" | "commands" | "description" | "meta";
+  const blocks: { type: BlockType; content: string }[] = [];
+  let currentLines: string[] = [];
+  let currentType: BlockType = "description";
+
+  const sectionMap: Record<string, BlockType> = {
+    usage: "usage",
+    options: "options",
+    flags: "options",
+    commands: "commands",
+    subcommands: "commands",
+    alias: "meta",
+    aliases: "meta",
+    examples: "meta",
+    arguments: "meta",
+    environment: "meta",
+    notes: "meta",
+  };
+
+  for (const line of lines) {
+    const headerMatch = line.match(/^\s*(Usage|Options|Flags|Commands|Subcommands|Alias|Aliases|Examples|Arguments|Environment|Notes):/i);
+    
+    if (headerMatch) {
+      if (currentLines.length > 0) {
+        blocks.push({ type: currentType, content: currentLines.join("\n") });
+      }
+      
+      const header = headerMatch[1]!.toLowerCase();
+      currentType = sectionMap[header] || "meta";
+      currentLines = [line];
+    } else {
+      // If we see an empty line after a usage/meta block, the next content should 
+      // likely be treated as description unless it's a new header.
+      if (!line.trim() && (currentType === "usage" || currentType === "meta")) {
+        if (currentLines.length > 0) {
+          blocks.push({ type: currentType, content: currentLines.join("\n") });
+        }
+        currentType = "description";
+        currentLines = [];
+      } else {
+        currentLines.push(line);
+      }
+    }
+  }
+  
+  if (currentLines.length > 0) {
+    blocks.push({ type: currentType, content: currentLines.join("\n") });
+  }
+
+  let name = "unknown";
+  let descriptionParts: string[] = [];
   let version: string | undefined;
+  let usage: string | undefined;
   const options: ProgramOption[] = [];
   const commands: ProgramCommand[] = [];
 
-  const usageMatch = text.match(/Usage:\s+([a-zA-Z0-9-]+)/i);
-  if (usageMatch) {
-    rawName = usageMatch[1] || "unknown";
-  }
+  for (const block of blocks) {
+    const content = block.content.trim();
+    if (!content) continue;
 
-  // Extract version if present (e.g., "1.3.5" or "v1.3.5")
-  const versionMatch = text.match(/v?(\d+\.\d+\.\d+)/);
-  if (versionMatch) {
-    version = versionMatch[1];
-  }
-
-  const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
-
-  // Find description: look for the first line that doesn't start with "Usage" and has content
-  for (const line of nonEmptyLines) {
-    const trimmed = line.trim();
-
-    // Stop if we hit a section header, to avoid capturing commands or options as description
-    if (trimmed.match(/^(Commands|Subcommands|Options|Flags|Arguments|Examples):/i)) {
-      break;
-    }
-
-    const isUsage = trimmed.toLowerCase().startsWith("usage:");
-    const isAlias = trimmed.match(/^(alias|aliases):/i);
-
-    if (!isUsage && !isAlias && trimmed.length > 5) {
-      description = trimmed;
-      break;
-    }
-  }
-
-  // Fallback description if the above logic fails
-  if (!description && nonEmptyLines.length > 0) {
-    const firstLine = nonEmptyLines[0]!.trim();
-    if (!firstLine.toLowerCase().startsWith("usage:")) {
-      description = firstLine;
-    }
-  }
-
-  const optionRegex =
-    /^\s*(-[a-zA-Z0-9])?,\s*(--[a-zA-Z0-9-]+)(?:[=\s]+(<[a-zA-Z0-9-]+>|\[[a-zA-Z0-9-]+\]))?\s+(.*)$/;
-  const alternateOptionRegex =
-    /^\s*(--[a-zA-Z0-9-]+)(?:[=\s]+(<[a-zA-Z0-9-]+>|\[[a-zA-Z0-9-]+\]))?\s+(.*)$/;
-  const commandRegex = /^\s+([a-z0-9-]+)\s+(.*)$/;
-
-  let inCommandsSection = false;
-
-  for (const line of lines) {
-    if (line.match(/(Commands|Subcommands):/i)) {
-      inCommandsSection = true;
-      continue;
-    }
-
-    let match = line.match(optionRegex);
-    if (!match) {
-      match = line.match(alternateOptionRegex);
-    }
-
-    if (match) {
-      const isAlt = match.length === 4;
-      const short = isAlt ? undefined : match[1];
-      const long = isAlt ? match[1] : match[2];
-      const placeholder = isAlt ? match[2] : match[3];
-      const desc = isAlt ? match[3] : match[4];
-
-      if (long) {
-        options.push({
-          name: normalizeName(long.replace(/^--/, "")),
-          short: short?.replace(/^-/, ""),
-          long: long.replace(/^--/, ""),
-          description: ensureDescription(desc?.trim() || "", 1),
-          type: placeholder ? "string" : "boolean",
-        });
+    if (!version) {
+      const versionMatch = content.match(/v?(\d+\.\d+\.\d+)/);
+      if (versionMatch) {
+        version = versionMatch[1];
       }
-      continue;
     }
 
-    if (inCommandsSection) {
-      const cmdMatch = line.match(commandRegex);
-      if (cmdMatch) {
-        const cmdName = cmdMatch[1];
-        const cmdDesc = cmdMatch[2];
-        if (cmdName && cmdDesc) {
-          commands.push({
-            name: normalizeName(cmdName.trim()),
-            description: ensureDescription(cmdDesc.trim(), 10),
-          });
+    switch (block.type) {
+      case "usage": {
+        usage = content.replace(/^\s*usage:\s*/i, "").trim();
+        const nameMatch = usage.match(/^([a-zA-Z0-9-]+)/);
+        if (nameMatch) name = nameMatch[1]!;
+        break;
+      }
+      case "options": {
+        const lines = content.split("\n");
+        for (const line of lines.slice(1)) {
+          const opt = parseOptionLine(line);
+          if (opt) options.push(opt);
         }
+        break;
+      }
+      case "commands": {
+        const lines = content.split("\n");
+        for (const line of lines.slice(1)) {
+          const cmd = parseCommandLine(line);
+          if (cmd) commands.push(cmd);
+        }
+        break;
+      }
+      case "description": {
+        const lines = content.split("\n");
+        const firstLine = lines[0]?.trim() || "";
+        
+        if (descriptionParts.length === 0 && !firstLine.includes(":") && lines.length === 1) {
+          const parts = firstLine.split(/\s+-\s+|\s{2,}/);
+          if (parts.length > 1) {
+            if (name === "unknown") {
+              name = normalizeName(parts[0]!);
+            }
+            descriptionParts.push(parts.slice(1).join(" "));
+            break;
+          }
+        }
+        descriptionParts.push(content);
+        break;
       }
     }
   }
 
   return {
-    name: normalizeName(rawName),
-    description: ensureDescription(description, 10),
+    name: normalizeName(name),
+    description: ensureDescription(descriptionParts.join("\n\n"), 10),
     version,
+    usage,
     options,
     commands,
+  };
+}
+
+function parseOptionLine(line: string): ProgramOption | null {
+  // Matches: -s, --long <arg>  Description
+  // or: --long  Description
+  const regex = /^\s*(?:(-[a-zA-Z0-9]),?\s+)?(--[a-zA-Z0-9-]+)(?:[=\s]+(<[^>]+>|\[[^\]]+\]))?\s+(.*)$/;
+  const match = line.match(regex);
+  if (!match) return null;
+
+  const [, short, long, placeholder, description] = match;
+  if (!long) return null;
+
+  return {
+    name: normalizeName(long.replace(/^--/, "")),
+    short: short?.replace(/^-/, ""),
+    long: long.replace(/^--/, ""),
+    description: ensureDescription(description || ""),
+    type: placeholder ? "string" : "boolean",
+  };
+}
+
+function parseCommandLine(line: string): ProgramCommand | null {
+  // Matches: command  Description
+  const regex = /^\s+([a-z0-9-]+)\s+(.*)$/;
+  const match = line.match(regex);
+  if (!match) return null;
+
+  const [, cmdName, description] = match;
+  if (!cmdName) return null;
+
+  return {
+    name: normalizeName(cmdName),
+    description: ensureDescription(description || ""),
   };
 }
