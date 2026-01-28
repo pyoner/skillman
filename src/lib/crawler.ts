@@ -57,9 +57,7 @@ export async function crawlCommand(commandName: string): Promise<CrawledSkill> {
       }
 
       // Ensure subcommand name is set correctly
-      if (subProgram.name === "unknown") {
-        subProgram.name = cmd.name;
-      }
+      subProgram.name = cmd.name;
       
       references.push({
         name: cmd.name,
