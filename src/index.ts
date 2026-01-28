@@ -1,66 +1,62 @@
+import { Command } from "commander";
 import { parseHelp, stripAnsi } from "./lib/parser";
 import { generateSkill } from "./lib/generator";
 import { crawlCommand } from "./lib/crawler";
 import { saveSkill } from "./lib/writer";
+import packageJson from "../package.json";
 
-async function main() {
-  let input = "";
-  let isCommandMode = false;
-  const args = process.argv.slice(2);
+const program = new Command();
 
-  // Priority 1: Arguments provided
-  if (args.length > 0) {
-    const arg = args[0]!;
+program
+  .name("skillman")
+  .description("Convert CLI help text or man pages into Agent Skill format")
+  .version(packageJson.version || "0.0.0")
+  .argument("[input]", "command name to crawl, file path to parse, or empty for stdin")
+  .action(async (inputArgument: string | undefined) => {
+    let input = "";
+    let isCommandMode = false;
 
-    // Check if the argument is an existing file
-    const file = Bun.file(arg);
-    if (await file.exists()) {
-      input = await file.text();
+    // 1. Handle Input (Positional Argument or Stdin)
+    if (inputArgument) {
+      const file = Bun.file(inputArgument);
+      if (await file.exists()) {
+        input = await file.text();
+      } else {
+        isCommandMode = true;
+        input = inputArgument;
+      }
+    } else if (!process.stdin.isTTY) {
+      input = await Bun.stdin.text();
     } else {
-      // If not a file, assume it's a command name to crawl
-      isCommandMode = true;
-      input = arg;
+      program.help();
     }
-  }
-  // Priority 2: Stdin provided (and no args)
-  else if (!process.stdin.isTTY) {
-    input = await Bun.stdin.text();
-  }
-  // Priority 3: Usage error
-  else {
-    console.error('Usage: skillman <command-name|file-path> or echo "help text" | skillman');
-    process.exit(1);
-  }
 
-  if (!input.trim()) {
-    console.error("No input provided");
-    process.exit(1);
-  }
-
-  if (isCommandMode) {
-    try {
-      console.error(`Crawling command: ${input}...`);
-      const crawled = await crawlCommand(input);
-
-      const outDir = await saveSkill(crawled);
-      console.log(`Skill generated at: ${outDir}`);
-    } catch (e) {
-      console.error(
-        `Error crawling command '${input}':`,
-        e instanceof Error ? e.message : String(e),
-      );
+    if (!input.trim()) {
+      console.error("Error: No input provided");
       process.exit(1);
     }
-  } else {
-    // File/Stdin Parsing Mode (Output JSON)
-    const cleanInput = stripAnsi(input);
-    const parsed = parseHelp(cleanInput);
-    const skill = generateSkill(parsed, cleanInput);
-    console.log(JSON.stringify(skill, null, 2));
-  }
-}
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+    // 2. Execute Logic
+    if (isCommandMode) {
+      try {
+        console.error(`Crawling command: ${input}...`);
+        const crawled = await crawlCommand(input);
+        const outDir = await saveSkill(crawled);
+        console.log(`Skill generated at: ${outDir}`);
+      } catch (e) {
+        console.error(
+          `Error crawling command '${input}':`,
+          e instanceof Error ? e.message : String(e),
+        );
+        process.exit(1);
+      }
+    } else {
+      // File/Stdin Parsing Mode (Output JSON)
+      const cleanInput = stripAnsi(input);
+      const parsed = parseHelp(cleanInput);
+      const skill = generateSkill(parsed, cleanInput);
+      console.log(JSON.stringify(skill, null, 2));
+    }
+  });
+
+program.parse();

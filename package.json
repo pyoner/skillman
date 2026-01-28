@@ -1,5 +1,6 @@
 {
   "name": "skillman",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "module": "src/index.ts",
@@ -10,6 +11,7 @@
     "lint:fix": "oxlint --fix"
   },
   "dependencies": {
+    "commander": "^14.0.2",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-stringify": "^11.0.0",
