@@ -5,7 +5,9 @@
   "module": "src/index.ts",
   "scripts": {
     "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check"
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "dependencies": {
     "remark-frontmatter": "^5.0.0",
@@ -18,7 +20,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/mdast": "^4.0.4",
-    "oxfmt": "^0.27.0"
+    "oxfmt": "^0.27.0",
+    "oxlint": "^1.42.0"
   },
   "peerDependencies": {
     "typescript": "^5"
