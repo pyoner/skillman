@@ -25,7 +25,6 @@ async function getHelpText(command: string[]): Promise<string> {
   } catch (e) {
     // Some commands might output help to stderr or exit with non-zero
     // We try to capture that if possible, otherwise return empty
-    console.error(e);
     return "";
   } finally {
     await rm(tempDir, { recursive: true, force: true });
