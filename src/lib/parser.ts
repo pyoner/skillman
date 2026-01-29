@@ -107,7 +107,8 @@ export function parseHelp(text: string): Program {
       header.includes("scripts") ||
       header.includes("other") ||
       header.includes("review") ||
-      header.includes("manage")
+      header.includes("manage") ||
+      header.includes("commands")
     ) {
       return "commands";
     }
@@ -144,7 +145,8 @@ export function parseHelp(text: string): Program {
     if (colonMatch) {
       headerText = colonMatch[1]!.trim();
       // If it has a colon, we are fairly confident if it's not too long
-      if (headerText.length < 50) isValidHeader = true;
+      // Increased to 100 to support verbose headers like "These are common Git commands..."
+      if (headerText.length < 100) isValidHeader = true;
     } else if (exactMatch) {
       headerText = exactMatch[1]!.trim();
       // If no colon, be stricter: All Caps or Known
