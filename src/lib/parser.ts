@@ -199,8 +199,13 @@ export function parseHelp(text: string): Program {
     } else {
       // No header -> usually description or usage if it contains "Usage:"
       // Check if lines contain "Usage:"
-      if (block.lines.some(l => /^\s*usage:/i.test(l))) {
-          type = "usage";
+      if (block.lines.some((l) => /^\s*usage:/i.test(l))) {
+        type = "usage";
+      } else {
+        const inferredType = detectBlockTypeFromContent(block.lines);
+        if (inferredType) {
+          type = inferredType;
+        }
       }
     }
 
@@ -278,7 +283,13 @@ function parseOptionsBlock(content: string): ProgramOption[] {
   const lines = content.split("\n").slice(1);
   let currentOpt: ProgramOption | null = null;
 
-  const optRegex = /^\s*(?:(-[a-zA-Z0-9]),?\s+)?(--[a-zA-Z0-9-]+)(?:[=\s]+(<[^>]+>|\[[^\]]+\]))?/;
+  // Regex breakdown:
+  // 1. Optional short flag: (?:(-[a-zA-Z0-9]),?\s+)?
+  // 2. Long flag: (--[a-zA-Z0-9-]+)
+  // 3. Optional argument (captured in group 3):
+  //    - Non-capturing separator: (?:[=\s]*) (allows space, =, or direct attachment)
+  //    - Content: <...>, [...], or uppercase word (FILE, LOCALE)
+  const optRegex = /^\s*(?:(-[a-zA-Z0-9]),?\s+)?(--[a-zA-Z0-9-]+)(?:[=\s]*)(<[^>]+>|\[[^\]]+\]|(?:[A-Z0-9_]+)(?=\s|$))?/;
 
   for (const line of lines) {
     const match = line.match(optRegex);
