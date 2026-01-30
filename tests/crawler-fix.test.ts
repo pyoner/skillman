@@ -4,7 +4,7 @@ import { resolve } from "path";
 
 describe("Crawler Fix", () => {
   test("should ignore subcommands that do not return valid help", async () => {
-    const mockCliPath = resolve(process.cwd(), "tests/repro_issue.ts");
+    const mockCliPath = resolve(process.cwd(), "tests/repro-issue.ts");
 
     console.log(`Crawling mock CLI at: ${mockCliPath}`);
 
