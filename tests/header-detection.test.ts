@@ -50,7 +50,7 @@ Description:
     expect(descBlock).toBeDefined();
 
     // The lines should be preserved as text within the description block
-    const textContent = descBlock?.content.map((c) => c.raw).join("\n");
+    const textContent = descBlock?.content.map((c) => c.meta.raw).join("\n");
     expect(textContent).toContain("Note: This is just a note.");
 
     expect(blocks.find((b) => b.header === "Note")).toBeUndefined();

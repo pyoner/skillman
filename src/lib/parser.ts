@@ -3,19 +3,32 @@ import { type Program, type ProgramOption, type ProgramCommand } from "./schema"
 
 // --- Types ---
 
-export type TextContent = { type: "text"; data: string; raw: string };
-export type CommandContent = { type: "command"; data: ProgramCommand; raw: string };
-export type OptionContent = { type: "option"; data: ProgramOption; raw: string };
+export type Meta = {
+  lineNumber: number;
+  raw: string;
+};
+
+type BaseContent<T, D> = {
+  type: T;
+  data: D;
+  meta: Meta;
+};
+
+export type TextContent = BaseContent<"text", string>;
+export type CommandContent = BaseContent<"command", ProgramCommand>;
+export type OptionContent = BaseContent<"option", ProgramOption>;
 export type Content = TextContent | CommandContent | OptionContent;
 
 export type Block = {
   header: string;
   content: Content[];
+  meta: Meta;
 };
 
 type RawBlock = {
   header: string | null;
   lines: string[];
+  startLine: number;
 };
 
 type BlockType = "usage" | "options" | "commands" | "description";
@@ -156,15 +169,25 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
   const blocks: RawBlock[] = [];
   let currentHeader: string | null = null;
   let currentLines: string[] = [];
+  let currentStartLine = 1;
 
   const flush = () => {
     if (currentLines.length > 0 || currentHeader) {
-      blocks.push({ header: currentHeader, lines: currentLines });
+      blocks.push({
+        header: currentHeader,
+        lines: currentLines,
+        startLine: currentStartLine,
+      });
     }
   };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
+    // If this is the start of a new block (and currentLines is empty), update startLine
+    if (currentLines.length === 0 && !currentHeader) {
+      currentStartLine = i + 1;
+    }
+
     const trimmed = line.trim();
 
     // Handle block breaks on empty lines for specific sections
@@ -173,6 +196,12 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
         flush();
         currentHeader = null;
         currentLines = [];
+        // Next block starts at next line
+        currentStartLine = i + 2; // i is empty line, so next is i+1. But loop increments i. Wait.
+        // If we flush here, the empty line is consumed.
+        // The next iteration will be i+1.
+        // We need to ensure currentStartLine is set correctly for the next block.
+        // We can just rely on the "if currentLines.length === 0" check at top of loop if we reset properly.
         continue;
       }
     }
@@ -211,6 +240,7 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
       flush();
       currentHeader = detectedHeader;
       currentLines = [line];
+      currentStartLine = i + 1;
     } else {
       currentLines.push(line);
     }
@@ -248,7 +278,11 @@ function detectBlockType(lines: string[], header: string | null): BlockType {
 }
 
 function parseRawBlock(block: RawBlock): Block {
-  let linesToParse = [...block.lines];
+  // Map lines to include line numbers
+  let linesToParse = block.lines.map((text, idx) => ({
+    text,
+    line: block.startLine + idx,
+  }));
 
   // Clean header from first line if present
   if (block.header && linesToParse.length > 0) {
@@ -256,11 +290,11 @@ function parseRawBlock(block: RawBlock): Block {
     const escapedHeader = block.header.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     const headerRegex = new RegExp(`^\\s*${escapedHeader}(?:\\s*:)?`, "i");
 
-    const match = firstLine.match(headerRegex);
+    const match = firstLine.text.match(headerRegex);
     if (match) {
-      const remaining = firstLine.slice(match[0].length).trim();
+      const remaining = firstLine.text.slice(match[0].length).trim();
       if (remaining) {
-        linesToParse[0] = remaining;
+        linesToParse[0]!.text = remaining;
       } else {
         linesToParse.shift();
       }
@@ -268,6 +302,7 @@ function parseRawBlock(block: RawBlock): Block {
   }
 
   // Detect type (skip header line for detection if we have a header)
+  // We use the text for detection logic
   const linesForDetection = block.header ? block.lines.slice(1) : block.lines;
   const type = detectBlockType(linesForDetection, block.header);
 
@@ -279,19 +314,32 @@ function parseRawBlock(block: RawBlock): Block {
   } else {
     // Default to text, user requested filtering empty lines
     content = linesToParse
-      .filter((l) => l.trim().length > 0)
-      .map((l) => ({ type: "text", data: l.trim(), raw: l }));
+      .filter((l) => l.text.trim().length > 0)
+      .map((l) => ({
+        type: "text",
+        data: l.text.trim(),
+        meta: {
+          lineNumber: l.line,
+          raw: l.text,
+        },
+      }));
   }
 
   return {
     header: block.header || "Description",
     content,
+    meta: {
+      lineNumber: block.startLine,
+      raw: block.lines.join("\n"),
+    },
   };
 }
 
 // --- Content Parsers ---
 
-function parseOptions(lines: string[]): Content[] {
+type LineInfo = { text: string; line: number };
+
+function parseOptions(lines: LineInfo[]): Content[] {
   const content: Content[] = [];
   let current: OptionContent | null = null;
 
@@ -303,7 +351,7 @@ function parseOptions(lines: string[]): Content[] {
     }
   };
 
-  for (const line of lines) {
+  for (const { text: line, line: lineNumber } of lines) {
     if (!line.trim()) continue;
 
     const match = line.match(REGEX.OPTION);
@@ -321,23 +369,33 @@ function parseOptions(lines: string[]): Content[] {
           description: remaining,
           type: placeholder ? "string" : "boolean",
         },
-        raw: line,
+        meta: {
+          lineNumber: lineNumber,
+          raw: line,
+        },
       };
     } else if (current && line.trim() && line.startsWith(" ")) {
       // Continuation
       current.data.description += " " + line.trim();
-      current.raw += "\n" + line;
+      current.meta.raw += "\n" + line;
     } else {
       // Text fallback
       pushCurrent();
-      content.push({ type: "text", data: line.trim(), raw: line });
+      content.push({
+        type: "text",
+        data: line.trim(),
+        meta: {
+          lineNumber: lineNumber,
+          raw: line,
+        },
+      });
     }
   }
   pushCurrent();
   return content;
 }
 
-function parseCommands(lines: string[]): Content[] {
+function parseCommands(lines: LineInfo[]): Content[] {
   const content: Content[] = [];
   let current: CommandContent | null = null;
 
@@ -349,7 +407,7 @@ function parseCommands(lines: string[]): Content[] {
     }
   };
 
-  for (const line of lines) {
+  for (const { text: line, line: lineNumber } of lines) {
     if (!line.trim()) {
       pushCurrent(); // Empty line breaks description for commands
       continue;
@@ -372,16 +430,26 @@ function parseCommands(lines: string[]): Content[] {
           name: normalizeName(name),
           description: parts.slice(1).join("  ").trim(),
         },
-        raw: line,
+        meta: {
+          lineNumber: lineNumber,
+          raw: line,
+        },
       };
     } else if (current && line.startsWith(" ")) {
       // Continuation
       current.data.description += " " + line.trim();
-      current.raw += "\n" + line;
+      current.meta.raw += "\n" + line;
     } else {
       // Text fallback
       pushCurrent();
-      content.push({ type: "text", data: line.trim(), raw: line });
+      content.push({
+        type: "text",
+        data: line.trim(),
+        meta: {
+          lineNumber: lineNumber,
+          raw: line,
+        },
+      });
     }
   }
   pushCurrent();
