@@ -13,7 +13,8 @@ program
   .version(packageJson.version || "0.0.0")
   .argument("[input]", "command name to crawl, file path to parse, or empty for stdin")
   .option("-o, --out <dir>", "output directory for the generated skill", ".")
-  .action(async (inputArgument: string | undefined, options: { out: string }) => {
+  .option("--debug-parser", "print the intermediate parser output")
+  .action(async (inputArgument: string | undefined, options: { out: string; debugParser?: boolean }) => {
     let input = "";
     let isCommandMode = false;
 
@@ -55,6 +56,12 @@ program
       // File/Stdin Parsing Mode
       const cleanInput = stripAnsi(input);
       const blocks = parseHelp(cleanInput);
+
+      if (options.debugParser) {
+        console.log(JSON.stringify(blocks, null, 2));
+        return;
+      }
+
       const parsed = compileProgram(blocks);
 
       if (options.out !== ".") {

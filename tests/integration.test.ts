@@ -48,4 +48,22 @@ describe("Integration", () => {
 
     await $`rm -rf ${outDir}`.quiet();
   });
+
+  test("should support --debug-parser option", async () => {
+    const helpText = "Usage: my-tool --help";
+    const { stdout, exitCode } =
+      await $`echo ${helpText} | bun run src/index.ts --debug-parser`.quiet();
+
+    expect(exitCode).toBe(0);
+
+    const output = stdout.toString();
+    const json = JSON.parse(output);
+
+    expect(Array.isArray(json)).toBe(true);
+    // Should have at least one block
+    expect(json.length).toBeGreaterThan(0);
+    // First block typically contains Usage
+    expect(json[0].header).toBe("Usage");
+    expect(json[0].content).toBeDefined();
+  });
 });
