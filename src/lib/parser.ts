@@ -22,6 +22,9 @@ type BlockType = "usage" | "options" | "commands" | "description";
 
 // --- Constants ---
 
+// Headers that allow content on the same line (e.g. "Usage: myapp")
+const INLINE_HEADERS = new Set(["usage", "alias", "aliases"]);
+
 // Headers that typically don't span across empty lines, signaling a block break
 const SINGLE_CHUNK_HEADERS = new Set([
   "usage",
@@ -40,12 +43,6 @@ const REGEX = {
   
   // Command definition: indent + name + args + spacing
   COMMAND: /^\s{2,}[a-zA-Z0-9](?:[a-zA-Z0-9._,\-]|\s(?!\s))*(\s{2,}|\s*$)/,
-  
-  // Header with colon: "Usage:"
-  HEADER_COLON: /^\s*([A-Z][a-zA-Z0-9\s-]+):/,
-  
-  // Header without colon (strict): "OPTIONS"
-  HEADER_EXACT: /^\s*([A-Z0-9\s-]+)\s*$/,
   
   // Option-like line (for heuristics)
   IS_OPTION: /^\s*-{1,2}[a-zA-Z0-9]/,
@@ -97,6 +94,41 @@ function isCommandLine(line: string): boolean {
   return REGEX.COMMAND.test(line);
 }
 
+function detectHeader(line: string): string | null {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+
+  // 1. Colon Headers
+  // Matches "Header Name:" optionally followed by text
+  const colonMatch = trimmed.match(/^([A-Z][a-zA-Z0-9\s-]+):(\s+(.*))?$/);
+  if (colonMatch) {
+    const headerName = colonMatch[1]!.trim();
+    const hasContent = !!colonMatch[3];
+
+    // If it's a known inline header, accept it even with content
+    if (INLINE_HEADERS.has(headerName.toLowerCase())) {
+      return headerName;
+    }
+
+    // Otherwise, require it to be standalone (no content after colon)
+    if (!hasContent) {
+      if (headerName.length < 50) return headerName;
+    }
+    
+    return null; // Has content but not an allowed inline header -> Treat as text
+  }
+
+  // 2. Exact Headers (No Colon) - e.g. "DESCRIPTION" or "COMMANDS"
+  // Strict: All Caps, no lower case letters (allow numbers/spaces)
+  if (/^[A-Z0-9\s-]+$/.test(trimmed) && trimmed.length > 2 && trimmed.length < 50) {
+      // Must not look like a flag (e.g. -V) or a command (leading spaces already trimmed)
+      if (trimmed.startsWith("-")) return null;
+      return trimmed;
+  }
+
+  return null;
+}
+
 // --- Parsing Logic ---
 
 export function parseHelp(text: string): Block[] {
@@ -132,18 +164,7 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
     }
 
     // Detect Header
-    let detectedHeader: string | null = null;
-    const colonMatch = line.match(REGEX.HEADER_COLON);
-    const exactMatch = line.match(REGEX.HEADER_EXACT);
-
-    if (colonMatch) {
-      const h = colonMatch[1]!.trim();
-      if (h.length < 100) detectedHeader = h;
-    } else if (exactMatch) {
-      const h = exactMatch[1]!.trim();
-      // Strict check for headers without colons: All Caps & length > 2
-      if (/^[A-Z0-9\s-]+$/.test(h) && h.length > 2) detectedHeader = h;
-    }
+    const detectedHeader = detectHeader(line);
 
     if (detectedHeader) {
       flush();
