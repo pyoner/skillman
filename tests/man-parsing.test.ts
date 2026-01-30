@@ -1,6 +1,6 @@
 
 import { expect, test, describe } from "bun:test";
-import { parseHelp } from "../src/lib/parser";
+import { parseHelp, compileProgram } from "../src/lib/parser";
 
 const manHelpText = `Usage: man [OPTION...] [SECTION] PAGE...
 
@@ -77,7 +77,8 @@ for any corresponding short options.
 Report bugs to cjwatson@debian.org.`;
 
 describe("Parser - man -h", () => {
-  const parsed = parseHelp(manHelpText);
+  const blocks = parseHelp(manHelpText);
+  const parsed = compileProgram(blocks);
 
   test("should identify program name", () => {
     expect(parsed.name).toBe("man");

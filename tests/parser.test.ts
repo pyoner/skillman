@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { parseHelp } from "../src/lib/parser";
+import { parseHelp, compileProgram } from "../src/lib/parser";
 
 describe("Parser", () => {
   test("should parse simple help text", () => {
@@ -13,7 +13,8 @@ Options:
   -o, --output <path>    Output file path
   --version              Show version
     `;
-    const parsed = parseHelp(helpText);
+    const blocks = parseHelp(helpText);
+    const parsed = compileProgram(blocks);
 
     expect(parsed.name).toBe("myprogram");
     expect(parsed.options).toHaveLength(3);
@@ -37,7 +38,8 @@ Commands:
   build      Build the project
   deploy     Deploy to production
     `;
-    const parsed = parseHelp(helpText);
+    const blocks = parseHelp(helpText);
+    const parsed = compileProgram(blocks);
 
     expect(parsed.commands).toHaveLength(2);
     expect(parsed.commands[0]?.name).toBe("build");
@@ -52,7 +54,8 @@ Commands:
 
 \u001b[1mBun\u001b[0m is a fast JavaScript runtime.
     `;
-    const parsed = parseHelp(helpText);
+    const blocks = parseHelp(helpText);
+    const parsed = compileProgram(blocks);
 
     expect(parsed.name).toBe("bun");
     expect(parsed.description).toBe("Bun is a fast JavaScript runtime.");
@@ -72,7 +75,8 @@ Options:
   --help, -h        Show this help message
 `;
 
-    const result = parseHelp(helpText);
+    const blocks = parseHelp(helpText);
+    const result = compileProgram(blocks);
 
     // Should not capture "init [name] ..." as description
     expect(result.description).not.toContain("init [name]");
@@ -89,7 +93,8 @@ Alias: bun a
 Flags:
   -c, --config=<val>                 Specify path to config file (bunfig.toml)
 `;
-    const parsed = parseHelp(helpText);
+    const blocks = parseHelp(helpText);
+    const parsed = compileProgram(blocks);
 
     expect(parsed.name).toBe("bun");
     expect(parsed.description).toBe("Add a new dependency to package.json and install it.");

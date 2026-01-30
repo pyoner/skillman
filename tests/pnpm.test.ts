@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { parseHelp } from "../src/lib/parser";
+import { parseHelp, compileProgram } from "../src/lib/parser";
 
 describe("Pnpm Parser Compatibility", () => {
   test("should parse pnpm style help text", () => {
@@ -32,7 +32,8 @@ Manage your store:
 Options:
   -r, --recursive          Run the command for each project in the workspace.
 `;
-    const result = parseHelp(helpText);
+    const blocks = parseHelp(helpText);
+    const result = compileProgram(blocks);
 
     expect(result.name).toBe("pnpm");
     expect(result.version).toBe("10.10.0");

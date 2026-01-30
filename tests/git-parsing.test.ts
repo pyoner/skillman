@@ -1,6 +1,6 @@
 
 import { expect, test, describe } from "bun:test";
-import { parseHelp } from "../src/lib/parser";
+import { parseHelp, compileProgram } from "../src/lib/parser";
 
 const gitHelpText = `usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
@@ -49,7 +49,8 @@ See 'git help git' for an overview of the system.
 `;
 
 describe("Parser - git -h", () => {
-  const parsed = parseHelp(gitHelpText);
+  const blocks = parseHelp(gitHelpText);
+  const parsed = compileProgram(blocks);
 
   test("should identify program name", () => {
     expect(parsed.name).toBe("git");

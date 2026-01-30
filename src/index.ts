@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { parseHelp, stripAnsi } from "./lib/parser";
+import { parseHelp, stripAnsi, compileProgram } from "./lib/parser";
 import { generateSkill } from "./lib/generator";
 import { crawlCommand } from "./lib/crawler";
 import { saveSkill } from "./lib/writer";
@@ -54,7 +54,8 @@ program
     } else {
       // File/Stdin Parsing Mode
       const cleanInput = stripAnsi(input);
-      const parsed = parseHelp(cleanInput);
+      const blocks = parseHelp(cleanInput);
+      const parsed = compileProgram(blocks);
 
       if (options.out !== ".") {
         // Output to directory as SKILL.md

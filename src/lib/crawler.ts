@@ -2,7 +2,7 @@ import { $ } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseHelp, stripAnsi } from "./parser";
+import { parseHelp, stripAnsi, compileProgram } from "./parser";
 import { type Program } from "./schema";
 
 export interface CrawledSkill {
@@ -38,7 +38,8 @@ export async function crawlCommand(commandName: string): Promise<CrawledSkill> {
     throw new Error(`Could not fetch help for command: ${commandName}`);
   }
 
-  const mainProgram = parseHelp(mainRaw);
+  const mainBlocks = parseHelp(mainRaw);
+  const mainProgram = compileProgram(mainBlocks);
   // Ensure the program name matches the requested command if parser failed to extract it
   if (mainProgram.name === "unknown") {
     mainProgram.name = commandName;
@@ -52,7 +53,8 @@ export async function crawlCommand(commandName: string): Promise<CrawledSkill> {
     const cmdArgs = cmd.name.split(/\s+/);
     const subCmdRaw = await getHelpText([commandName, ...cmdArgs]);
     if (subCmdRaw.trim()) {
-      const subProgram = parseHelp(subCmdRaw);
+      const subBlocks = parseHelp(subCmdRaw);
+      const subProgram = compileProgram(subBlocks);
 
       // Ignore invalid help output
       if (
