@@ -68,6 +68,25 @@ export function stripAnsi(string: string): string {
   return stripVTControlCharacters(string);
 }
 
+function extractNames(name: string): { name: string; aliases: string[] } {
+  let mainName = name;
+  const aliases: string[] = [];
+
+  if (name.includes(",")) {
+    const parts = name.split(",").map((p) => p.trim());
+    mainName = parts[parts.length - 1] || name;
+    // All parts except the last one are aliases
+    for (let i = 0; i < parts.length - 1; i++) {
+      const alias = normalizeName(parts[i]!);
+      if (alias && alias !== "unknown") {
+        aliases.push(alias);
+      }
+    }
+  }
+
+  return { name: normalizeName(mainName), aliases };
+}
+
 function normalizeName(name: string): string {
   if (name.includes(",")) {
     const parts = name.split(",").map((p) => p.trim());
@@ -424,10 +443,12 @@ function parseCommands(lines: LineInfo[]): Content[] {
     if (isCommand) {
       pushCurrent();
       const name = parts[0]!.trim();
+      const { name: mainName, aliases } = extractNames(name);
       current = {
         type: "command",
         data: {
-          name: normalizeName(name),
+          name: mainName,
+          aliases: aliases.length > 0 ? aliases : undefined,
           description: parts.slice(1).join("  ").trim(),
         },
         meta: {

@@ -12,6 +12,7 @@ export const ProgramCommand = z.object({
   name: z.string(),
   description: z.string(),
   usage: z.string().optional(),
+  aliases: z.array(z.string()).optional(),
 });
 export type ProgramCommand = z.infer<typeof ProgramCommand>;
 
