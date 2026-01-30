@@ -94,13 +94,25 @@ function isCommandLine(line: string): boolean {
   return REGEX.COMMAND.test(line);
 }
 
+
+function getIndent(line: string): number {
+  let indent = 0;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === " ") indent++;
+    else if (line[i] === "\t") indent += 2; // Treat tab as 2 spaces for heuristics
+    else break;
+  }
+  return indent;
+}
+
 function detectHeader(line: string): string | null {
   const trimmed = line.trim();
   if (!trimmed) return null;
 
   // 1. Colon Headers
   // Matches "Header Name:" optionally followed by text
-  const colonMatch = trimmed.match(/^([A-Z][a-zA-Z0-9\s-]+):(\s+(.*))?$/);
+  // Relaxed: Allow lower case start (e.g. "usage:")
+  const colonMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9\s-]+):(\s+(.*))?$/);
   if (colonMatch) {
     const headerName = colonMatch[1]!.trim();
     const hasContent = !!colonMatch[3];
@@ -129,6 +141,7 @@ function detectHeader(line: string): string | null {
   return null;
 }
 
+
 // --- Parsing Logic ---
 
 export function parseHelp(text: string): Block[] {
@@ -150,7 +163,8 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
     }
   };
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
     const trimmed = line.trim();
 
     // Handle block breaks on empty lines for specific sections
@@ -164,7 +178,28 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
     }
 
     // Detect Header
-    const detectedHeader = detectHeader(line);
+    let detectedHeader = detectHeader(line);
+
+    // Heuristic: Implicit Indentation Header (for Git-style)
+    // If no explicit header, check if this line acts as a header for indented content
+    // Refinement: Implicit headers must be top-level (indent < 2) to avoid capturing commands as headers
+    if (!detectedHeader && trimmed && trimmed.length < 80 && !trimmed.endsWith(".") && !trimmed.endsWith(",")) {
+      const currentIndent = getIndent(line);
+      
+      if (currentIndent < 2) {
+        // Lookahead for content with deeper indentation
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLine = lines[j]!;
+          if (!nextLine.trim()) continue; // Skip empty lines
+          
+          const nextIndent = getIndent(nextLine);
+          if (nextIndent >= currentIndent + 2) {
+               detectedHeader = trimmed;
+          }
+          break; // Only check the immediate next non-empty line
+        }
+      }
+    }
 
     if (detectedHeader) {
       flush();

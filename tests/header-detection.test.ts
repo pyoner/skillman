@@ -66,4 +66,35 @@ My Custom Header:
     const blocks = parseHelp(text);
     expect(blocks.find(b => b.header === "My Custom Header")).toBeDefined();
   });
+
+  test("detects implicit headers via indentation (Git-style)", () => {
+    const text = `
+start a working area
+   clone     Clone a repository
+   init      Create an empty Git repository
+`.trim();
+    const blocks = parseHelp(text);
+    const block = blocks.find(b => b.header === "start a working area");
+    expect(block).toBeDefined();
+    expect(block?.content).toHaveLength(2);
+    expect(block?.content[0]?.type).toBe("command");
+  });
+
+  test("does NOT detect implicit header if indentation is deep (Bun-style subcommands)", () => {
+    const text = [
+      "  run       ./my-script.ts       Execute a file with Bun",
+      "            lint                 Run a package.json script"
+    ].join("\n");
+    
+    // "run" is indented by 2. "lint" by 12. 
+    // Heuristic requires header indent < 2.
+    // So "run..." should NOT be a header.
+    const blocks = parseHelp(text);
+    const runHeader = blocks.find(b => b.header.includes("run"));
+    expect(runHeader).toBeUndefined();
+    
+    // It should probably be parsed as text or description if no other header exists
+    // (In this snippet, it will likely be Description)
+    expect(blocks[0]?.header).toBe("Description");
+  });
 });
