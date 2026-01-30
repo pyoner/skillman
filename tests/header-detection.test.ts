@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { parseHelp } from "../src/lib/parser";
+import { parseHelp } from "../src/lib/parsers";
 
 describe("Header Detection Rules", () => {
   test("detects 'Usage' as header (inline)", () => {

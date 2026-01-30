@@ -2,7 +2,7 @@ import { $ } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseHelp, stripAnsi, compileProgram } from "./parser";
+import { parseHelp, stripAnsi, compileProgram } from "./parsers";
 import { type Program } from "./schema";
 
 export interface CrawledSkill {

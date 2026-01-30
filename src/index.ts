@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { parseHelp, stripAnsi, compileProgram } from "./lib/parser";
+import { parseHelp, stripAnsi, compileProgram } from "./lib/parsers";
 import { generateSkill } from "./lib/generator";
 import { crawlCommand } from "./lib/crawler";
 import { saveSkill } from "./lib/writer";
@@ -14,70 +14,72 @@ program
   .argument("[input]", "command name to crawl, file path to parse, or empty for stdin")
   .option("-o, --out <dir>", "output directory for the generated skill", ".")
   .option("--debug-parser", "print the intermediate parser output")
-  .action(async (inputArgument: string | undefined, options: { out: string; debugParser?: boolean }) => {
-    let input = "";
-    let isCommandMode = false;
+  .action(
+    async (inputArgument: string | undefined, options: { out: string; debugParser?: boolean }) => {
+      let input = "";
+      let isCommandMode = false;
 
-    // 1. Handle Input (Positional Argument or Stdin)
-    if (inputArgument) {
-      const file = Bun.file(inputArgument);
-      if (await file.exists()) {
-        input = await file.text();
+      // 1. Handle Input (Positional Argument or Stdin)
+      if (inputArgument) {
+        const file = Bun.file(inputArgument);
+        if (await file.exists()) {
+          input = await file.text();
+        } else {
+          isCommandMode = true;
+          input = inputArgument;
+        }
+      } else if (!process.stdin.isTTY) {
+        input = await Bun.stdin.text();
       } else {
-        isCommandMode = true;
-        input = inputArgument;
+        program.help();
       }
-    } else if (!process.stdin.isTTY) {
-      input = await Bun.stdin.text();
-    } else {
-      program.help();
-    }
 
-    if (!input.trim()) {
-      console.error("Error: No input provided");
-      process.exit(1);
-    }
-
-    // 2. Execute Logic
-    if (isCommandMode) {
-      try {
-        console.error(`Crawling command: ${input}...`);
-        const crawled = await crawlCommand(input);
-        const outDir = await saveSkill(crawled, options.out);
-        console.error(`Skill generated at: ${outDir}`);
-      } catch (e) {
-        console.error(
-          `Error crawling command '${input}':`,
-          e instanceof Error ? e.message : String(e),
-        );
+      if (!input.trim()) {
+        console.error("Error: No input provided");
         process.exit(1);
       }
-    } else {
-      // File/Stdin Parsing Mode
-      const cleanInput = stripAnsi(input);
-      const blocks = parseHelp(cleanInput);
 
-      if (options.debugParser) {
-        console.log(JSON.stringify(blocks, null, 2));
-        return;
-      }
-
-      const parsed = compileProgram(blocks);
-
-      if (options.out !== ".") {
-        // Output to directory as SKILL.md
-        const crawled = {
-          main: { program: parsed, raw: cleanInput },
-          references: [],
-        };
-        const outDir = await saveSkill(crawled, options.out);
-        console.error(`Skill generated at: ${outDir}`);
+      // 2. Execute Logic
+      if (isCommandMode) {
+        try {
+          console.error(`Crawling command: ${input}...`);
+          const crawled = await crawlCommand(input);
+          const outDir = await saveSkill(crawled, options.out);
+          console.error(`Skill generated at: ${outDir}`);
+        } catch (e) {
+          console.error(
+            `Error crawling command '${input}':`,
+            e instanceof Error ? e.message : String(e),
+          );
+          process.exit(1);
+        }
       } else {
-        // Default: Output JSON to stdout
-        const skill = generateSkill(parsed, cleanInput);
-        console.log(JSON.stringify(skill, null, 2));
+        // File/Stdin Parsing Mode
+        const cleanInput = stripAnsi(input);
+        const blocks = parseHelp(cleanInput);
+
+        if (options.debugParser) {
+          console.log(JSON.stringify(blocks, null, 2));
+          return;
+        }
+
+        const parsed = compileProgram(blocks);
+
+        if (options.out !== ".") {
+          // Output to directory as SKILL.md
+          const crawled = {
+            main: { program: parsed, raw: cleanInput },
+            references: [],
+          };
+          const outDir = await saveSkill(crawled, options.out);
+          console.error(`Skill generated at: ${outDir}`);
+        } else {
+          // Default: Output JSON to stdout
+          const skill = generateSkill(parsed, cleanInput);
+          console.log(JSON.stringify(skill, null, 2));
+        }
       }
-    }
-  });
+    },
+  );
 
 program.parse();

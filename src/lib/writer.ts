@@ -4,7 +4,7 @@ import { u } from "unist-builder";
 import { type RootContent } from "mdast";
 import { generateSkill } from "./generator";
 import { createSkillAst, createMarkdownProcessor, renderSkillBody } from "./renderer";
-import { stripAnsi } from "./parser";
+import { stripAnsi } from "./parsers";
 import { type CrawledSkill } from "./crawler";
 
 export async function saveSkill(crawled: CrawledSkill, outDir: string = "."): Promise<string> {

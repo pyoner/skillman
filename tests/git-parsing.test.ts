@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { parseHelp, compileProgram } from "../src/lib/parser";
+import { parseHelp, compileProgram } from "../src/lib/parsers";
 
 const gitHelpText = `usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]

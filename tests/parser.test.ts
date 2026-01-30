@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { parseHelp, compileProgram } from "../src/lib/parser";
+import { parseHelp, compileProgram } from "../src/lib/parsers";
 
 describe("Parser", () => {
   test("should parse simple help text", () => {
