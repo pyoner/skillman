@@ -1,4 +1,3 @@
-
 import { expect, test, describe } from "bun:test";
 import { parseHelp, compileProgram } from "../src/lib/parser";
 
@@ -111,9 +110,9 @@ describe("Parser - man -h", () => {
   });
 
   test("should handle multi-line descriptions", () => {
-     const namesOnly = parsed.options.find(o => o.long === "names-only");
-     expect(namesOnly).toBeDefined();
-     expect(namesOnly?.description).toContain("match page names only");
-     expect(namesOnly?.description).toContain("not descriptions");
+    const namesOnly = parsed.options.find((o) => o.long === "names-only");
+    expect(namesOnly).toBeDefined();
+    expect(namesOnly?.description).toContain("match page names only");
+    expect(namesOnly?.description).toContain("not descriptions");
   });
 });

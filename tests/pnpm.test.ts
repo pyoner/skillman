@@ -37,9 +37,9 @@ Options:
 
     expect(result.name).toBe("pnpm");
     expect(result.version).toBe("10.10.0");
-    
+
     // Check commands
-    const commandNames = result.commands.map(c => c.name);
+    const commandNames = result.commands.map((c) => c.name);
     expect(commandNames).toContain("add");
     expect(commandNames).toContain("install");
     expect(commandNames).toContain("install-test");
@@ -47,15 +47,15 @@ Options:
     expect(commandNames).toContain("test");
     expect(commandNames).toContain("store add");
 
-    const addCmd = result.commands.find(c => c.name === "add");
+    const addCmd = result.commands.find((c) => c.name === "add");
     expect(addCmd?.description).toContain("Installs a package");
     expect(addCmd?.description).toContain("prod dependency");
 
-    const installCmd = result.commands.find(c => c.name === "install");
+    const installCmd = result.commands.find((c) => c.name === "install");
     expect(installCmd?.description).toBe("Install all dependencies for a project");
 
     // Check options
-    const recursive = result.options.find(o => o.long === "recursive");
+    const recursive = result.options.find((o) => o.long === "recursive");
     expect(recursive).toBeDefined();
     expect(recursive?.short).toBe("r");
   });

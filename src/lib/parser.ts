@@ -39,11 +39,12 @@ const SINGLE_CHUNK_HEADERS = new Set([
 // Regex for detection
 const REGEX = {
   // Option definition: -s, --long <arg>
-  OPTION: /^\s*(?:(-[a-zA-Z0-9]),?\s+)?(--[a-zA-Z0-9-]+)(?:[=\s]*)(<[^>]+>|\[[^\]]+\]|(?:[A-Z0-9_]+)(?=\s|$))?/,
-  
+  OPTION:
+    /^\s*(?:(-[a-zA-Z0-9]),?\s+)?(--[a-zA-Z0-9-]+)(?:[=\s]*)(<[^>]+>|\[[^\]]+\]|(?:[A-Z0-9_]+)(?=\s|$))?/,
+
   // Command definition: indent + name + args + spacing
-  COMMAND: /^\s{2,}[a-zA-Z0-9](?:[a-zA-Z0-9._,\-]|\s(?!\s))*(\s{2,}|\s*$)/,
-  
+  COMMAND: /^\s{2,}[a-zA-Z0-9](?:[a-zA-Z0-9._,-]|\s(?!\s))*(\s{2,}|\s*$)/,
+
   // Option-like line (for heuristics)
   IS_OPTION: /^\s*-{1,2}[a-zA-Z0-9]/,
 };
@@ -73,15 +74,15 @@ function normalizeName(name: string): string {
 function ensureDescription(desc: string, minLength: number = 1): string {
   desc = desc.trim().replace(/\s+/g, " ");
   if (desc.length === 0) return "No description available for this item.";
-  
+
   if (desc.length < minLength) {
     return desc + " ".repeat(minLength - desc.length).replace(/ /g, ".");
   }
-  
+
   if (desc.length > 1024) {
     return desc.slice(0, 1021) + "...";
   }
-  
+
   return desc;
 }
 
@@ -94,12 +95,12 @@ function isCommandLine(line: string): boolean {
   return REGEX.COMMAND.test(line);
 }
 
-
 function getIndent(line: string): number {
   let indent = 0;
   for (let i = 0; i < line.length; i++) {
     if (line[i] === " ") indent++;
-    else if (line[i] === "\t") indent += 2; // Treat tab as 2 spaces for heuristics
+    else if (line[i] === "\t")
+      indent += 2; // Treat tab as 2 spaces for heuristics
     else break;
   }
   return indent;
@@ -126,28 +127,27 @@ function detectHeader(line: string): string | null {
     if (!hasContent) {
       if (headerName.length < 50) return headerName;
     }
-    
+
     return null; // Has content but not an allowed inline header -> Treat as text
   }
 
   // 2. Exact Headers (No Colon) - e.g. "DESCRIPTION" or "COMMANDS"
   // Strict: All Caps, no lower case letters (allow numbers/spaces)
   if (/^[A-Z0-9\s-]+$/.test(trimmed) && trimmed.length > 2 && trimmed.length < 50) {
-      // Must not look like a flag (e.g. -V) or a command (leading spaces already trimmed)
-      if (trimmed.startsWith("-")) return null;
-      return trimmed;
+    // Must not look like a flag (e.g. -V) or a command (leading spaces already trimmed)
+    if (trimmed.startsWith("-")) return null;
+    return trimmed;
   }
 
   return null;
 }
-
 
 // --- Parsing Logic ---
 
 export function parseHelp(text: string): Block[] {
   text = stripAnsi(text);
   const lines = text.split("\n");
-  
+
   const rawBlocks = groupLinesIntoBlocks(lines);
   return rawBlocks.map(parseRawBlock);
 }
@@ -183,18 +183,24 @@ function groupLinesIntoBlocks(lines: string[]): RawBlock[] {
     // Heuristic: Implicit Indentation Header (for Git-style)
     // If no explicit header, check if this line acts as a header for indented content
     // Refinement: Implicit headers must be top-level (indent < 2) to avoid capturing commands as headers
-    if (!detectedHeader && trimmed && trimmed.length < 80 && !trimmed.endsWith(".") && !trimmed.endsWith(",")) {
+    if (
+      !detectedHeader &&
+      trimmed &&
+      trimmed.length < 80 &&
+      !trimmed.endsWith(".") &&
+      !trimmed.endsWith(",")
+    ) {
       const currentIndent = getIndent(line);
-      
+
       if (currentIndent < 2) {
         // Lookahead for content with deeper indentation
         for (let j = i + 1; j < lines.length; j++) {
           const nextLine = lines[j]!;
           if (!nextLine.trim()) continue; // Skip empty lines
-          
+
           const nextIndent = getIndent(nextLine);
           if (nextIndent >= currentIndent + 2) {
-               detectedHeader = trimmed;
+            detectedHeader = trimmed;
           }
           break; // Only check the immediate next non-empty line
         }
@@ -243,13 +249,13 @@ function detectBlockType(lines: string[], header: string | null): BlockType {
 
 function parseRawBlock(block: RawBlock): Block {
   let linesToParse = [...block.lines];
-  
+
   // Clean header from first line if present
   if (block.header && linesToParse.length > 0) {
     const firstLine = linesToParse[0]!;
-    const escapedHeader = block.header.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-    const headerRegex = new RegExp(`^\\s*${escapedHeader}(?:\\s*:)?`, 'i');
-    
+    const escapedHeader = block.header.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    const headerRegex = new RegExp(`^\\s*${escapedHeader}(?:\\s*:)?`, "i");
+
     const match = firstLine.match(headerRegex);
     if (match) {
       const remaining = firstLine.slice(match[0].length).trim();
@@ -305,7 +311,7 @@ function parseOptions(lines: string[]): Content[] {
       pushCurrent();
       const [, short, long, placeholder] = match;
       const remaining = line.slice(match[0].length).trim();
-      
+
       current = {
         type: "option",
         data: {
@@ -351,9 +357,11 @@ function parseCommands(lines: string[]): Content[] {
 
     const parts = line.trim().split(/\s{2,}/);
     // Logic: Indented, looks like a command, not too long or complex to be text
-    const isCommand = line.startsWith("  ") && parts.length >= 2 && 
-                      !parts[0]!.includes(".") && 
-                      parts[0]!.split(/\s+/).length <= 3;
+    const isCommand =
+      line.startsWith("  ") &&
+      parts.length >= 2 &&
+      !parts[0]!.includes(".") &&
+      parts[0]!.split(/\s+/).length <= 3;
 
     if (isCommand) {
       pushCurrent();
@@ -390,13 +398,20 @@ export function compileProgram(blocks: Block[]): Program {
   const options: ProgramOption[] = [];
   const commands: ProgramCommand[] = [];
 
-  const META_HEADERS = new Set(["alias", "aliases", "examples", "arguments", "environment", "notes"]);
+  const META_HEADERS = new Set([
+    "alias",
+    "aliases",
+    "examples",
+    "arguments",
+    "environment",
+    "notes",
+  ]);
 
   for (const block of blocks) {
     const headerLower = block.header.toLowerCase();
     const isUsage = headerLower === "usage";
     const isMeta = META_HEADERS.has(headerLower);
-    
+
     // Check if this block contains structured data
     const hasOptions = block.content.some((i) => i.type === "option");
     const hasCommands = block.content.some((i) => i.type === "command");

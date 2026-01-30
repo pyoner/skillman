@@ -1,4 +1,3 @@
-
 import { expect, test, describe } from "bun:test";
 import { parseHelp, compileProgram } from "../src/lib/parser";
 
@@ -58,12 +57,12 @@ describe("Parser - git -h", () => {
 
   test("should parse commands", () => {
     expect(parsed.commands.length).toBeGreaterThan(10);
-    
-    const clone = parsed.commands.find(c => c.name === "clone");
+
+    const clone = parsed.commands.find((c) => c.name === "clone");
     expect(clone).toBeDefined();
     expect(clone?.description).toBe("Clone a repository into a new directory");
 
-    const commit = parsed.commands.find(c => c.name === "commit");
+    const commit = parsed.commands.find((c) => c.name === "commit");
     expect(commit).toBeDefined();
     expect(commit?.description).toBe("Record changes to the repository");
   });
@@ -71,10 +70,10 @@ describe("Parser - git -h", () => {
   test("should ignore category headers", () => {
     // "start" is the first word of "start a working area..."
     // It should NOT be parsed as a command
-    const start = parsed.commands.find(c => c.name === "start");
+    const start = parsed.commands.find((c) => c.name === "start");
     expect(start).toBeUndefined();
 
-    const work = parsed.commands.find(c => c.name === "work");
+    const work = parsed.commands.find((c) => c.name === "work");
     expect(work).toBeUndefined();
   });
 

@@ -1,4 +1,3 @@
-
 import { expect, test, describe } from "bun:test";
 import { parseHelp, compileProgram } from "../src/lib/parser";
 
@@ -14,8 +13,8 @@ Custom Parameters:
     const blocks = parseHelp(helpText);
     const parsed = compileProgram(blocks);
     expect(parsed.options).toHaveLength(2);
-    expect(parsed.options.find(o => o.long === "foo")).toBeTruthy();
-    expect(parsed.options.find(o => o.long === "bar")).toBeTruthy();
+    expect(parsed.options.find((o) => o.long === "foo")).toBeTruthy();
+    expect(parsed.options.find((o) => o.long === "bar")).toBeTruthy();
   });
 
   test("should classify unknown header as Commands if content looks like commands", () => {
@@ -29,8 +28,8 @@ Extra Actions:
     const blocks = parseHelp(helpText);
     const parsed = compileProgram(blocks);
     expect(parsed.commands).toHaveLength(2);
-    expect(parsed.commands.find(c => c.name === "start")).toBeTruthy();
-    expect(parsed.commands.find(c => c.name === "stop")).toBeTruthy();
+    expect(parsed.commands.find((c) => c.name === "start")).toBeTruthy();
+    expect(parsed.commands.find((c) => c.name === "stop")).toBeTruthy();
   });
 
   test("should fall back to description if content is ambiguous", () => {
@@ -50,18 +49,18 @@ Important Note:
     expect(parsed.options).toHaveLength(0);
     expect(parsed.commands).toHaveLength(0);
   });
-  
+
   test("should handle headers without colons if content is strong", () => {
-      const helpText = `
+    const helpText = `
 Usage: mycli
 
 GLOBAL OPTIONS
   --verbose   Run verbosely
   --quiet     Run quietly
 `;
-      const blocks = parseHelp(helpText);
-      const parsed = compileProgram(blocks);
-      expect(parsed.options).toHaveLength(2);
-      expect(parsed.options.find(o => o.long === "verbose")).toBeTruthy();
+    const blocks = parseHelp(helpText);
+    const parsed = compileProgram(blocks);
+    expect(parsed.options).toHaveLength(2);
+    expect(parsed.options.find((o) => o.long === "verbose")).toBeTruthy();
   });
 });
